@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.Domain.Shared", "src\Codium.Template.Domain.Shared\Codium.Template.Domain.Shared.csproj", "{004B4411-A943-49F0-8DDF-C58E19750F99}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.Domain", "src\Codium.Template.Domain\Codium.Template.Domain.csproj", "{40748BA4-03DD-45EF-9943-192A2523B72D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.EntityFrameworkCore", "src\Codium.Template.EntityFrameworkCore\Codium.Template.EntityFrameworkCore.csproj", "{569D7719-3F98-415C-AE34-F9816E2B5B86}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{004B4411-A943-49F0-8DDF-C58E19750F99} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
+		{40748BA4-03DD-45EF-9943-192A2523B72D} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
+		{569D7719-3F98-415C-AE34-F9816E2B5B86} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{004B4411-A943-49F0-8DDF-C58E19750F99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{004B4411-A943-49F0-8DDF-C58E19750F99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{004B4411-A943-49F0-8DDF-C58E19750F99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{004B4411-A943-49F0-8DDF-C58E19750F99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40748BA4-03DD-45EF-9943-192A2523B72D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40748BA4-03DD-45EF-9943-192A2523B72D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40748BA4-03DD-45EF-9943-192A2523B72D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40748BA4-03DD-45EF-9943-192A2523B72D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{569D7719-3F98-415C-AE34-F9816E2B5B86}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{569D7719-3F98-415C-AE34-F9816E2B5B86}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{569D7719-3F98-415C-AE34-F9816E2B5B86}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{569D7719-3F98-415C-AE34-F9816E2B5B86}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
