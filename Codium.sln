@@ -8,6 +8,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.Domain", "s
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.EntityFrameworkCore", "src\Codium.Template.EntityFrameworkCore\Codium.Template.EntityFrameworkCore.csproj", "{569D7719-3F98-415C-AE34-F9816E2B5B86}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.Application.Contracts", "src\Codium.Template.Application.Contracts\Codium.Template.Application.Contracts.csproj", "{2040B5FB-9216-444B-97C6-4E7B175A5E8C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.Application", "src\Codium.Template.Application\Codium.Template.Application.csproj", "{BD9639A4-B8F0-4E48-9731-403A16D5B5F6}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +21,8 @@ Global
 		{004B4411-A943-49F0-8DDF-C58E19750F99} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
 		{40748BA4-03DD-45EF-9943-192A2523B72D} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
 		{569D7719-3F98-415C-AE34-F9816E2B5B86} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
+		{2040B5FB-9216-444B-97C6-4E7B175A5E8C} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
+		{BD9639A4-B8F0-4E48-9731-403A16D5B5F6} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{004B4411-A943-49F0-8DDF-C58E19750F99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -31,5 +37,13 @@ Global
 		{569D7719-3F98-415C-AE34-F9816E2B5B86}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{569D7719-3F98-415C-AE34-F9816E2B5B86}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{569D7719-3F98-415C-AE34-F9816E2B5B86}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2040B5FB-9216-444B-97C6-4E7B175A5E8C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2040B5FB-9216-444B-97C6-4E7B175A5E8C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2040B5FB-9216-444B-97C6-4E7B175A5E8C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2040B5FB-9216-444B-97C6-4E7B175A5E8C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BD9639A4-B8F0-4E48-9731-403A16D5B5F6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BD9639A4-B8F0-4E48-9731-403A16D5B5F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BD9639A4-B8F0-4E48-9731-403A16D5B5F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BD9639A4-B8F0-4E48-9731-403A16D5B5F6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
