@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Samet Karademir",
+  "classifications": ["Web", "API", "Codium"],
+  "name": "Codium .NET Template",
+  "description": "A .NET project template for building web APIs with Codium architecture.",
+  "identity": "Codium.Template",
+  "groupIdentity": "Codium.NLayer",
+  "shortName": "codium",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "Codium.Template",
+  "preferNameDirectory": true,
+  "symbols": {
+    "ProjectName": {
+      "type": "parameter",
+      "datatype": "string",
+      "replaces": "Codium.Template",
+      "fileRename": "Codium.Template",
+      "description": "The name of the project"
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "**/*.user",
+            "**/.vs/**",
+            ".git/**"
+          ]
+        }
+      ]
+    }
+  ]
+}
