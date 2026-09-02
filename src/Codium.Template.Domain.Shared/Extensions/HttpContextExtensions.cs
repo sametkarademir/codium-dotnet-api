@@ -108,24 +108,6 @@ public static class HttpContextExtensions
         httpContext.SetRequestHeaderValue("X-Session-ID", sessionId.ToString());
     }
 
-    public static Guid? GetSnapshotId(this HttpContext httpContext)
-    {
-        var value = httpContext.GetRequestHeaderValue("X-Snapshot-ID");
-        if (string.IsNullOrEmpty(value))
-        {
-            return null;
-        }
-
-        Guid.TryParse(value, out var guid);
-
-        return guid;
-    }
-
-    public static void SetSnapshotId(this HttpContext httpContext, Guid snapshotId)
-    {
-        httpContext.SetRequestHeaderValue("X-Snapshot-ID", snapshotId.ToString());
-    }
-
     #endregion
 
     #region UserAgent

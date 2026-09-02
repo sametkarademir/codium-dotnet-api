@@ -74,7 +74,7 @@ public class SessionAppService : ISessionAppService
             var matchedSession = await _sessionRepository.RevokeSessionByUserAsync(sessionId, _currentUser.Id!.Value, cancellationToken);
             if (matchedSession == null) 
             {
-                throw new AppEntityNotFoundException(_localizer["ProfileAppService:InvalidateSessionAsync:SessionNotFound"]);
+                throw new AppEntityNotFoundException(_localizer["SessionAppService:InvalidateSessionAsync:SessionNotFound"]);
             }
         
             await _refreshTokenRepository.RevokeRefreshTokensBySessionAsync(matchedSession.Id, _currentUser.Id!.Value, cancellationToken);

@@ -12,6 +12,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.Application
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.Application", "src\Codium.Template.Application\Codium.Template.Application.csproj", "{BD9639A4-B8F0-4E48-9731-403A16D5B5F6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.HttpApi.Client", "src\Codium.Template.HttpApi.Client\Codium.Template.HttpApi.Client.csproj", "{A5F90D18-26A7-4996-B016-66E51902DA4A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.HttpApi", "src\Codium.Template.HttpApi\Codium.Template.HttpApi.csproj", "{C22E0D1A-FD5F-45E9-96ED-C6DEFCB23DB4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Codium.Template.HttpApi.Host", "src\Codium.Template.HttpApi.Host\Codium.Template.HttpApi.Host.csproj", "{F8403BC7-4BD9-4E10-9B0A-B0FB8F9EB120}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -23,6 +29,9 @@ Global
 		{569D7719-3F98-415C-AE34-F9816E2B5B86} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
 		{2040B5FB-9216-444B-97C6-4E7B175A5E8C} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
 		{BD9639A4-B8F0-4E48-9731-403A16D5B5F6} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
+		{A5F90D18-26A7-4996-B016-66E51902DA4A} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
+		{C22E0D1A-FD5F-45E9-96ED-C6DEFCB23DB4} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
+		{F8403BC7-4BD9-4E10-9B0A-B0FB8F9EB120} = {2A3120AB-8C6C-4CD5-BB86-2C0DA4FAFEB1}
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{004B4411-A943-49F0-8DDF-C58E19750F99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -45,5 +54,17 @@ Global
 		{BD9639A4-B8F0-4E48-9731-403A16D5B5F6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BD9639A4-B8F0-4E48-9731-403A16D5B5F6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BD9639A4-B8F0-4E48-9731-403A16D5B5F6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A5F90D18-26A7-4996-B016-66E51902DA4A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A5F90D18-26A7-4996-B016-66E51902DA4A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A5F90D18-26A7-4996-B016-66E51902DA4A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A5F90D18-26A7-4996-B016-66E51902DA4A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C22E0D1A-FD5F-45E9-96ED-C6DEFCB23DB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C22E0D1A-FD5F-45E9-96ED-C6DEFCB23DB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C22E0D1A-FD5F-45E9-96ED-C6DEFCB23DB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C22E0D1A-FD5F-45E9-96ED-C6DEFCB23DB4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F8403BC7-4BD9-4E10-9B0A-B0FB8F9EB120}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F8403BC7-4BD9-4E10-9B0A-B0FB8F9EB120}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F8403BC7-4BD9-4E10-9B0A-B0FB8F9EB120}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F8403BC7-4BD9-4E10-9B0A-B0FB8F9EB120}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -10,15 +10,14 @@ public static class PermissionConsts
     public static class Permission
     {
         private const string Group = "Permission";
-        public const string GetAll = Group + Separator + "GetAll";
+        public const string View = Group + Separator + "View";
     }
     
     public static class Role
     {
         private const string Group = "Role";
-        public const string GetById = Group + Separator + "GetById";
-        public const string GetAll = Group + Separator + "GetAll";
-        public const string Paged = Group + Separator + "Paged";
+        public const string Detail = Group + Separator + "Detail";
+        public const string View = Group + Separator + "View";
         public const string Create = Group + Separator + "Create";
         public const string Update = Group + Separator + "Update";
         public const string Delete = Group + Separator + "Delete";
@@ -29,9 +28,8 @@ public static class PermissionConsts
     public static class User
     {
         private const string Group = "User";
-        public const string GetById = Group + Separator + "GetById";
-        public const string GetAll = Group + Separator + "GetAll";
-        public const string Paged = Group + Separator + "Paged";
+        public const string Detail = Group + Separator + "Detail";
+        public const string View = Group + Separator + "View";
         public const string Create = Group + Separator + "Create";
         public const string Update = Group + Separator + "Update";
         public const string Delete = Group + Separator + "Delete";

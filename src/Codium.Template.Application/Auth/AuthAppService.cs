@@ -369,7 +369,6 @@ public class AuthAppService : IAuthAppService
         var deviceInfo = _httpContextAccessor.HttpContext?.GetDeviceInfo();
         var clientIp = _httpContextAccessor.HttpContext?.GetClientIpAddress() ?? "Unknown";
         var userAgent = _httpContextAccessor.HttpContext?.GetUserAgent() ?? "Unknown";
-        var snapshotId = _httpContextAccessor.HttpContext?.GetSnapshotId();
         var correlationId = _httpContextAccessor.HttpContext?.GetCorrelationId();
 
         var newUserSession = new Session
@@ -387,7 +386,6 @@ public class AuthAppService : IAuthAppService
             IsMobile = deviceInfo?.IsMobile ?? false,
             IsDesktop = deviceInfo?.IsDesktop ?? false,
             IsTablet = deviceInfo?.IsTablet ?? false,
-            SnapshotId = snapshotId,
             CorrelationId = correlationId,
             UserId = userId,
         };
