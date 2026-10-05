@@ -1,5 +1,4 @@
 using AutoMapper;
-using Codium.Template.Application.Contracts.Common.Results;
 using Codium.Template.Application.Contracts.Sessions;
 using Codium.Template.Application.Contracts.Users;
 using Codium.Template.Domain.Repositories;

@@ -1,0 +1,169 @@
+[
+  {
+    "line": 3,
+    "status": 200
+  },
+  {
+    "line": 11,
+    "status": 204
+  },
+  {
+    "line": 17,
+    "status": 200
+  },
+  {
+    "body": {
+      "data": {
+        "email": "p-<sfx>@example.com",
+        "emailConfirmed": true,
+        "firstName": "Pro",
+        "id": "<guid>",
+        "lastName": "File",
+        "passwordChangedTime": null,
+        "phoneNumber": null,
+        "phoneNumberConfirmed": false,
+        "shouldChangePasswordOnNextLogin": true,
+        "twoFactorEnabled": false
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 24,
+    "status": 200
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:VALIDATION",
+      "Message": "Current password is incorrect",
+      "StatusCode": 400
+    },
+    "line": 31,
+    "status": 400,
+    "status_change_wrong_old": 400
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": [
+        {
+          "Errors": [
+            "Confirm password must match password"
+          ],
+          "Property": "ConfirmNewPassword"
+        }
+      ],
+      "ErrorCode": "APP:VALIDATION",
+      "Message": "\n -- ConfirmNewPassword: Confirm password must match password",
+      "StatusCode": 400
+    },
+    "line": 41,
+    "status": 400
+  },
+  {
+    "body": "",
+    "line": 50,
+    "status": 204,
+    "status_change_ok": 204
+  },
+  {
+    "body": {
+      "data": {
+        "accessToken": "<masked>",
+        "expiryTime": "<masked>",
+        "refreshToken": "<masked>"
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 59,
+    "status": 200
+  },
+  {
+    "line": 67,
+    "status": 401,
+    "status_login_old_password": 401
+  },
+  {
+    "body": {
+      "data": {
+        "data": [
+          {
+            "browserFamily": "Other",
+            "browserVersion": "",
+            "clientIp": "<masked>",
+            "deviceFamily": "Other",
+            "deviceModel": "",
+            "id": "<guid>",
+            "isDesktop": true,
+            "isMobile": false,
+            "isTablet": false,
+            "osFamily": "Other",
+            "osVersion": ""
+          },
+          {
+            "browserFamily": "Other",
+            "browserVersion": "",
+            "clientIp": "<masked>",
+            "deviceFamily": "Other",
+            "deviceModel": "",
+            "id": "<guid>",
+            "isDesktop": true,
+            "isMobile": false,
+            "isTablet": false,
+            "osFamily": "Other",
+            "osVersion": ""
+          },
+          {
+            "browserFamily": "Other",
+            "browserVersion": "",
+            "clientIp": "<masked>",
+            "deviceFamily": "Other",
+            "deviceModel": "",
+            "id": "<guid>",
+            "isDesktop": true,
+            "isMobile": false,
+            "isTablet": false,
+            "osFamily": "Other",
+            "osVersion": ""
+          },
+          {
+            "browserFamily": "Other",
+            "browserVersion": "",
+            "clientIp": "<masked>",
+            "deviceFamily": "Other",
+            "deviceModel": "",
+            "id": "<guid>",
+            "isDesktop": true,
+            "isMobile": false,
+            "isTablet": false,
+            "osFamily": "Other",
+            "osVersion": ""
+          }
+        ],
+        "meta": {
+          "currentPage": 1,
+          "isFirstPage": true,
+          "isLastPage": true,
+          "nextPage": null,
+          "perPage": 10,
+          "previousPage": null,
+          "totalCount": 4,
+          "totalPages": 1
+        }
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 75,
+    "status": 200,
+    "status_sessions_paged": 200
+  },
+  {
+    "body": "",
+    "line": 83,
+    "status": 204,
+    "status_session_delete": 204
+  }
+]

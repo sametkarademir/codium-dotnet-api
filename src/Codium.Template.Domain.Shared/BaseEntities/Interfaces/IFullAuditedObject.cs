@@ -6,15 +6,13 @@ namespace Codium.Template.Domain.Shared.BaseEntities.Interfaces;
 
 public interface IFullAuditedObject : 
     IAuditedObject,
-    IDeletionAuditedObject,
-    IConcurrencyStamp
+    IDeletionAuditedObject
 {
 }
 
 public interface IFullAuditedObject<TUser> : 
     IAuditedObject<TUser>, 
-    IDeletionAuditedObject<TUser>,
-    IConcurrencyStamp
+    IDeletionAuditedObject<TUser>
     where TUser : IEntity
 {
 }

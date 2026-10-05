@@ -1,3 +1,4 @@
+using Codium.Template.Application.Contracts.Extensions;
 using Codium.Template.Domain.Shared.Localization;
 using Codium.Template.Domain.Shared.Users;
 using FluentValidation;
@@ -41,7 +42,8 @@ public class CreateUserRequestDtoValidator : AbstractValidator<CreateUserRequest
             .MinimumLength(UserConsts.PasswordRequiredLength)
             .WithMessage(localizer["CreateUserRequestDto:Password:MinLength", UserConsts.PasswordRequiredLength])
             .MaximumLength(UserConsts.PasswordMaxLength)
-            .WithMessage(localizer["CreateUserRequestDto:Password:MaxLength", UserConsts.PasswordMaxLength]);
+            .WithMessage(localizer["CreateUserRequestDto:Password:MaxLength", UserConsts.PasswordMaxLength])
+            .MustSatisfyPasswordPolicy(localizer);
         
         RuleFor(item => item.ConfirmPassword)
             .Equal(item => item.Password).WithMessage(localizer["CreateUserRequestDto:ConfirmPassword:MustMatchPassword"]);

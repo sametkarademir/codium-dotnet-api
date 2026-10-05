@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <IsPackable>false</IsPackable>
+        <IsTestProject>true</IsTestProject>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.12.0" />
+        <PackageReference Include="xunit" Version="2.9.2" />
+        <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+        <PackageReference Include="NSubstitute" Version="5.3.0" />
+        <PackageReference Include="coverlet.collector" Version="6.0.2">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- DefaultHttpContext for CurrentUser tests -->
+        <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <Using Include="Xunit" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\..\src\Codium.Template.Application\Codium.Template.Application.csproj" />
+        <ProjectReference Include="..\..\src\Codium.Template.Application.Contracts\Codium.Template.Application.Contracts.csproj" />
+        <ProjectReference Include="..\..\src\Codium.Template.Domain\Codium.Template.Domain.csproj" />
+        <ProjectReference Include="..\..\src\Codium.Template.Domain.Shared\Codium.Template.Domain.Shared.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- Translation files are checked for completeness; they are linked, not copied into the repo twice. -->
+        <None Include="..\..\src\Codium.Template.HttpApi.Host\Resources\Localization\*.json"
+              Link="Resources\Localization\%(Filename)%(Extension)"
+              CopyToOutputDirectory="PreserveNewest" />
+    </ItemGroup>
+
+</Project>

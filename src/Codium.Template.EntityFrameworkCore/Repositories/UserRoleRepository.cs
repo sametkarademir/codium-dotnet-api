@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Codium.Template.EntityFrameworkCore.Repositories;
 
 public class UserRoleRepository(ApplicationDbContext context)
-    : EfRepositoryBase<UserRole, Guid, ApplicationDbContext>(context), IUserRoleRepository
+    : EfRepositoryBase<UserRole, ApplicationDbContext>(context), IUserRoleRepository
 {
     public async Task<(List<string> Roles, List<string> Permissions)> GetRolesAndPermissionsByUserIdAsync(
         Guid userId,
@@ -18,7 +18,7 @@ public class UserRoleRepository(ApplicationDbContext context)
             .Where(ur => ur.UserId == userId)
             .Select(ur => new
             {
-                RoleName = ur.Role!.Name,
+                RoleName = ur.Role!.Name!,
                 Permissions = ur.Role.RolePermissions.Select(rp => rp.Permission!.Name)
             })
             .ToListAsync(cancellationToken);
@@ -36,7 +36,7 @@ public class UserRoleRepository(ApplicationDbContext context)
     {
         return await AsQueryable()
             .Where(ur => ur.UserId == userId)
-            .Select(ur => ur.Role!.Name)
+            .Select(ur => ur.Role!.Name!)
             .ToListAsync(cancellationToken);
     }
 }

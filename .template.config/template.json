@@ -31,7 +31,9 @@
             "**/obj/**",
             "**/*.user",
             "**/.vs/**",
-            ".git/**"
+            ".git/**",
+            "specs/**",
+            ".specify/feature.json"
           ]
         }
       ],

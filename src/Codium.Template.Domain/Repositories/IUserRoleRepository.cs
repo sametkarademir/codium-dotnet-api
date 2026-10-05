@@ -3,7 +3,7 @@ using Codium.Template.Domain.UserRoles;
 
 namespace Codium.Template.Domain.Repositories;
 
-public interface IUserRoleRepository : IRepository<UserRole, Guid>
+public interface IUserRoleRepository : IRepository<UserRole>
 {
     Task<(List<string> Roles, List<string> Permissions)> GetRolesAndPermissionsByUserIdAsync(
         Guid userId,

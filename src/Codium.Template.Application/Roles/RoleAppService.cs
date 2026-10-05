@@ -1,5 +1,6 @@
 using AutoMapper;
 using Codium.Template.Application.Contracts.Common;
+using Codium.Template.Application.Contracts.Extensions;
 using Codium.Template.Application.Contracts.Permissions;
 using Codium.Template.Application.Contracts.Roles;
 using Codium.Template.Domain.Repositories;
@@ -11,6 +12,7 @@ using Codium.Template.Domain.Shared.Extensions;
 using Codium.Template.Domain.Shared.Localization;
 using Codium.Template.Domain.Shared.Repositories;
 using Codium.Template.Domain.Shared.Result;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Localization;
 
@@ -18,45 +20,48 @@ namespace Codium.Template.Application.Roles;
 
 public class RoleAppService : IRoleAppService
 {
-    private readonly IRoleRepository _roleRepository;
     private readonly IRolePermissionRepository _rolePermissionRepository;
     private readonly IPermissionRepository _permissionRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly RoleManager<Role> _roleManager;
+    private readonly ILookupNormalizer _lookupNormalizer;
     private readonly IStringLocalizer<ApplicationResource> _localizer;
 
 
     public RoleAppService(
-        IRoleRepository roleRepository,
         IRolePermissionRepository rolePermissionRepository,
         IPermissionRepository permissionRepository, 
         IUnitOfWork unitOfWork,
         IMapper mapper,
+        RoleManager<Role> roleManager,
+        ILookupNormalizer lookupNormalizer,
         IStringLocalizer<ApplicationResource> localizer)
     {
-        _roleRepository = roleRepository;
         _rolePermissionRepository = rolePermissionRepository;
         _permissionRepository = permissionRepository;
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _roleManager = roleManager;
+        _lookupNormalizer = lookupNormalizer;
         _localizer = localizer;
     }
 
     public async Task<Result<RoleResponseDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var matchedRole = await _roleRepository.GetAsync(
-            predicate: r => r.Id == id,
-            include: q => q
-                .Include(r => r.RolePermissions)
-                .ThenInclude(rp => rp.Permission)!,
-            enableTracking: false,
-            cancellationToken: cancellationToken
-        );
+        var matchedRole = await GetActiveRoles(enableTracking: false)
+            .Include(r => r.RolePermissions)
+            .ThenInclude(rp => rp.Permission)
+            .SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+        if (matchedRole == null)
+        {
+            throw new AppEntityNotFoundException(typeof(Role));
+        }
 
         var mappedRole = new RoleResponseDto
         {
             Id = matchedRole.Id,
-            Name = matchedRole.Name,
+            Name = matchedRole.Name!,
             Description = matchedRole.Description,
             Permissions = matchedRole.RolePermissions.Select(rp => new PermissionResponseDto
             {
@@ -70,14 +75,16 @@ public class RoleAppService : IRoleAppService
 
     public async Task<Result<ListResultDto<OptionResponseDto<Guid>>>> GetAllAsOptionsAsync(GetOptionsRequestDto request, CancellationToken cancellationToken = default)
     {
-        var matchedRoles = await _roleRepository.GetAllAsync(
-            predicate: !string.IsNullOrWhiteSpace(request.Search)
-                ? r => r.NormalizedName.Contains(request.Search.NormalizeValue())
-                : null,
-            orderBy: q => q.OrderBy(r => r.NormalizedName),
-            enableTracking: false,
-            cancellationToken: cancellationToken
-        );
+        var queryable = GetActiveRoles(enableTracking: false);
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var normalizedSearch = _lookupNormalizer.NormalizeName(request.Search)!;
+            queryable = queryable.Where(r => r.NormalizedName!.Contains(normalizedSearch));
+        }
+
+        var matchedRoles = await queryable
+            .OrderBy(r => r.NormalizedName)
+            .ToListAsync(cancellationToken);
 
         var options = _mapper.Map<List<OptionResponseDto<Guid>>>(matchedRoles);
 
@@ -86,16 +93,15 @@ public class RoleAppService : IRoleAppService
 
     public async Task<Result<PagedResult<RoleResponseDto>>> GetPageableAndFilterAsync(GetListRolesRequestDto request, CancellationToken cancellationToken = default)
     {
-        var pagedRoles = await _roleRepository.GetListSortedAsync(
-            page: request.Page,
-            perPage: request.PerPage,
-            predicate: !string.IsNullOrWhiteSpace(request.Search)
-                ? r => r.NormalizedName.Contains(request.Search.NormalizeValue())
-                : null,
-            sort: request.GetSortRequest(nameof(CreationAuditedEntity.CreationTime)),
-            enableTracking: false,
-            cancellationToken: cancellationToken
-        );
+        var queryable = GetActiveRoles(enableTracking: false);
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var normalizedSearch = _lookupNormalizer.NormalizeName(request.Search)!;
+            queryable = queryable.Where(r => r.NormalizedName!.Contains(normalizedSearch));
+        }
+
+        queryable = queryable.ApplySort(request.GetSortRequest(nameof(CreationAuditedEntity.CreationTime)));
+        var pagedRoles = await queryable.ToPageableAsync(request.Page, request.PerPage, cancellationToken);
 
         var mappedRoles = _mapper.Map<List<RoleResponseDto>>(pagedRoles.Data);
 
@@ -105,49 +111,46 @@ public class RoleAppService : IRoleAppService
 
     public async Task CreateAsync(CreateRoleRequestDto request, CancellationToken cancellationToken = default)
     {
-        var existingRole = await _roleRepository.ExistsByNameAsync(request.Name, cancellationToken: cancellationToken);
-        if (existingRole)
-        {
-            throw new AppConflictException(_localizer["RoleAppService:CreateAsync:Exists", request.Name]);
-        }
-        
         var newRole = new Role
         {
             Name = request.Name,
-            NormalizedName = request.Name.NormalizeValue(),
             Description = request.Description
         };
-        
-        await _roleRepository.AddAsync(newRole, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+
+        var result = await _roleManager.CreateAsync(newRole);
+        result.ThrowIfFailed(_localizer["RoleAppService:CreateAsync:Exists", request.Name]);
     }
 
     public async Task UpdateAsync(Guid id, UpdateRoleRequestDto request, CancellationToken cancellationToken = default)
     {
-        var matchedRole = await _roleRepository.GetAsync(
-            predicate: r => r.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
-
-        var existingRole = await _roleRepository.ExistsByNameAsync(request.Name, matchedRole.Id, cancellationToken);
-        if (existingRole)
+        var matchedRole = await GetActiveRoles(enableTracking: true)
+            .SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+        if (matchedRole == null)
         {
-            throw new AppConflictException(_localizer["RoleAppService:UpdateAsync:Exists", request.Name]);
+            throw new AppEntityNotFoundException(typeof(Role));
         }
-        
+
         matchedRole.Name = request.Name;
-        matchedRole.NormalizedName = request.Name.NormalizeValue();
         matchedRole.Description = request.Description;
 
-        await _roleRepository.UpdateAsync(matchedRole, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var result = await _roleManager.UpdateAsync(matchedRole);
+        result.ThrowIfFailed(_localizer["RoleAppService:UpdateAsync:Exists", request.Name]);
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await _roleRepository.DeleteAsync(id, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var matchedRole = await GetActiveRoles(enableTracking: true)
+            .SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+        if (matchedRole == null)
+        {
+            throw new AppEntityNotFoundException(typeof(Role), id);
+        }
+
+        matchedRole.IsDeleted = true;
+        matchedRole.DeletionTime = DateTime.UtcNow;
+
+        var result = await _roleManager.UpdateAsync(matchedRole);
+        result.ThrowIfFailed(_localizer["RoleAppService:UpdateAsync:Exists", matchedRole.Name!]);
     }
 
     public async Task SyncPermissionsAsync(Guid id, SyncRolePermissionsRequestDto request, CancellationToken cancellationToken = default)
@@ -156,12 +159,13 @@ public class RoleAppService : IRoleAppService
         
         try
         {
-            var matchedRole = await _roleRepository.GetAsync(
-                predicate: r => r.Id == id,
-                include: q => q.Include(r => r.RolePermissions),
-                enableTracking: true,
-                cancellationToken: cancellationToken
-            );
+            var matchedRole = await GetActiveRoles(enableTracking: true)
+                .Include(r => r.RolePermissions)
+                .SingleOrDefaultAsync(r => r.Id == id, cancellationToken);
+            if (matchedRole == null)
+            {
+                throw new AppEntityNotFoundException(typeof(Role));
+            }
             
             var currentPermissionIds = matchedRole.RolePermissions.Select(rp => rp.PermissionId).ToList();
        
@@ -209,5 +213,11 @@ public class RoleAppService : IRoleAppService
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }
+    }
+
+    private IQueryable<Role> GetActiveRoles(bool enableTracking)
+    {
+        var queryable = _roleManager.Roles.Where(r => !r.IsDeleted);
+        return enableTracking ? queryable : queryable.AsNoTracking();
     }
 }
