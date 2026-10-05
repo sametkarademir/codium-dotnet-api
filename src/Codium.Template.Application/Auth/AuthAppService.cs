@@ -14,64 +14,65 @@ using Codium.Template.Domain.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Localization;
-using SignInResult = Codium.Template.Domain.Shared.Result.SignInResult;
 
 namespace Codium.Template.Application.Auth;
 
 public class AuthAppService : IAuthAppService
 {
-    private readonly IUserRepository _userRepository;
+    private readonly UserManager<User> _userManager;
+    private readonly SignInManager<User> _signInManager;
     private readonly IUserRoleRepository _userRoleRepository;
     private readonly ISessionRepository _sessionRepository;
     private readonly IRefreshTokenRepository _refreshTokenRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICurrentUser _currentUser;
     private readonly IJwtTokenAppService _jwtTokenAppService;
-    private readonly IPasswordHasher<User> _passwordHasher;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IStringLocalizer<ApplicationResource> _localizer;
 
     public AuthAppService(
-        IUserRepository userRepository,
+        UserManager<User> userManager,
+        SignInManager<User> signInManager,
         IUserRoleRepository userRoleRepository,
         ISessionRepository sessionRepository, 
         IRefreshTokenRepository refreshTokenRepository,
         IUnitOfWork unitOfWork, ICurrentUser currentUser, 
         IJwtTokenAppService jwtTokenAppService, 
-        IPasswordHasher<User> passwordHasher,
         IHttpContextAccessor httpContextAccessor,
         IStringLocalizer<ApplicationResource> localizer)
     {
-        _userRepository = userRepository;
+        _userManager = userManager;
+        _signInManager = signInManager;
         _userRoleRepository = userRoleRepository;
         _sessionRepository = sessionRepository;
         _refreshTokenRepository = refreshTokenRepository;
         _unitOfWork = unitOfWork;
         _currentUser = currentUser;
         _jwtTokenAppService = jwtTokenAppService;
-        _passwordHasher = passwordHasher;
         _httpContextAccessor = httpContextAccessor;
         _localizer = localizer;
     }
 
     public async Task<Result<LoginResponseDto>> LoginAsync(LoginRequestDto request, CancellationToken cancellationToken = default)
     {
-        var matchedUser = await _userRepository.FindByEmailAsync(request.Email, cancellationToken);
+        var matchedUser = await _userManager.FindByEmailAsync(request.Email);
         if (matchedUser == null)
         {
             throw new AppUnauthorizedException(_localizer["AuthAppService:LoginAsync:InvalidCredentials"]);
         }
 
-        var signInResult = await CheckPasswordSignInAsync(
-            matchedUser,
-            request.Password,
-            true,
-            cancellationToken
-        );
-
+        var signInResult = await _signInManager.CheckPasswordSignInAsync(matchedUser, request.Password, lockoutOnFailure: true);
         if (signInResult.IsLockedOut)
         {
             throw new AppForbiddenException(_localizer["AuthAppService:LoginAsync:LockedOut"]);
+        }
+
+        if (signInResult.IsNotAllowed)
+        {
+            throw new AppForbiddenException(
+                !matchedUser.EmailConfirmed && UserConsts.RequireConfirmedEmail
+                    ? _localizer["AuthAppService:LoginAsync:EmailNotConfirmed"]
+                    : _localizer["AuthAppService:LoginAsync:PhoneNumberNotConfirmed"]);
         }
 
         if (!signInResult.Succeeded)
@@ -82,16 +83,6 @@ public class AuthAppService : IAuthAppService
         if (!matchedUser.IsActive)
         {
             throw new AppForbiddenException(_localizer["AuthAppService:LoginAsync:UserInactive"]);
-        }
-        
-        if (!matchedUser.EmailConfirmed && UserConsts.RequireConfirmedEmail)
-        {
-            throw new AppForbiddenException(_localizer["AuthAppService:LoginAsync:EmailNotConfirmed"]);
-        }
-        
-        if (!matchedUser.PhoneNumberConfirmed && UserConsts.RequireConfirmedPhoneNumber) 
-        {
-            throw new AppForbiddenException(_localizer["AuthAppService:LoginAsync:PhoneNumberNotConfirmed"]);
         }
 
         await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
@@ -104,7 +95,7 @@ public class AuthAppService : IAuthAppService
             var tokenResponse = _jwtTokenAppService.GenerateJwt(new GenerateJwtTokenRequestDto
             {
                 Id = matchedUser.Id,
-                Email = matchedUser.Email,
+                Email = matchedUser.Email!,
                 Roles = rolesAndPermissions.Roles,
                 Permissions = rolesAndPermissions.Permissions,
                 SessionId = newUserSessionId
@@ -148,10 +139,7 @@ public class AuthAppService : IAuthAppService
                 throw new AppUnauthorizedException();
             }
             
-            var matchedUser = await _userRepository.SingleOrDefaultAsync(
-                predicate: u => u.Id == matchedRefreshToken.UserId,
-                cancellationToken: cancellationToken
-            );
+            var matchedUser = await _userManager.FindByIdAsync(matchedRefreshToken.UserId.ToString());
             if (matchedUser == null)
             {
                 throw new AppUnauthorizedException();
@@ -162,7 +150,7 @@ public class AuthAppService : IAuthAppService
             var tokenResponse = _jwtTokenAppService.GenerateJwt(new GenerateJwtTokenRequestDto
             {
                 Id = matchedUser.Id,
-                Email = matchedUser.Email,
+                Email = matchedUser.Email!,
                 Roles = rolesAndPermissions.Roles,
                 Permissions = rolesAndPermissions.Permissions,
                 SessionId = matchedRefreshToken.SessionId
@@ -205,10 +193,7 @@ public class AuthAppService : IAuthAppService
                 throw new AppUnauthorizedException();
             }
 
-            var matchedUser = await _userRepository.SingleOrDefaultAsync(
-                predicate: u => u.Id == _currentUser.Id,
-                cancellationToken: cancellationToken
-            );
+            var matchedUser = await _userManager.FindByIdAsync(_currentUser.Id.Value.ToString());
             if (matchedUser == null)
             {
                 throw new AppUnauthorizedException();
@@ -242,117 +227,6 @@ public class AuthAppService : IAuthAppService
 
             throw;
         }
-    }
-
-    private async Task<SignInResult> CheckPasswordSignInAsync(
-        User user,
-        string password,
-        bool lockoutOnFailure,
-        CancellationToken cancellationToken
-    )
-    {
-        if (IsLockedOut(user))
-        {
-            return SignInResult.LockedOut();
-        }
-
-        if (VerifyPassword(user, password))
-        {
-            if (lockoutOnFailure)
-            {
-                // Başarılı giriş: Kilidi kaldır (kendi transaction'ında)
-                await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
-                try
-                {
-                    await UnlockAsync(user, cancellationToken);
-                    await transaction.CommitAsync(cancellationToken);
-                    await _unitOfWork.SaveChangesAsync(cancellationToken);
-                }
-                catch
-                {
-                    await transaction.RollbackAsync(cancellationToken);
-                    throw;
-                }
-            }
-
-            return SignInResult.Success();
-        }
-
-        if (lockoutOnFailure)
-        {
-            // Başarısız giriş: AccessFailedCount'u artır (kendi transaction'ında)
-            await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
-            try
-            {
-                await AccessFailedAsync(user, cancellationToken);
-                await transaction.CommitAsync(cancellationToken);
-                await _unitOfWork.SaveChangesAsync(cancellationToken);
-            }
-            catch
-            {
-                await transaction.RollbackAsync(cancellationToken);
-                throw;
-            }
-
-            if (IsLockedOut(user))
-            {
-                return SignInResult.LockedOut();
-            }
-        }
-
-        return SignInResult.Failed();
-    }
-
-    private bool IsLockedOut(User user)
-    {
-        if (!user.LockoutEnabled)
-        {
-            return false;
-        }
-
-        if (user.LockoutEnd == null)
-        {
-            return false;
-        }
-
-        return user.LockoutEnd > DateTimeOffset.UtcNow;
-    }
-
-    private bool VerifyPassword(User user, string password)
-    {
-        var verificationResult = _passwordHasher.VerifyHashedPassword(
-            user,
-            user.PasswordHash,
-            password
-        );
-
-        return verificationResult != PasswordVerificationResult.Failed;
-    }
-
-    private async Task UnlockAsync(User user, CancellationToken cancellationToken)
-    {
-        user.LockoutEnd = null;
-        user.AccessFailedCount = 0;
-
-        await _userRepository.UpdateAsync(user, cancellationToken);
-    }
-
-    private async Task AccessFailedAsync(User user, CancellationToken cancellationToken)
-    {
-        if (!user.LockoutEnabled)
-        {
-            return;
-        }
-
-        user.AccessFailedCount++;
-
-        if (user.AccessFailedCount >= UserConsts.MaxFailedAccessAttempts)
-        {
-            var lockoutMinutes = UserConsts.DefaultLockoutTimeSpanMinutes.TotalMinutes;
-            user.LockoutEnd = DateTime.UtcNow.AddMinutes(lockoutMinutes);
-        }
-
-        await _userRepository.UpdateAsync(user, cancellationToken);
     }
 
     private async Task<Guid> CreateSessionAsync(Guid userId, CancellationToken cancellationToken)

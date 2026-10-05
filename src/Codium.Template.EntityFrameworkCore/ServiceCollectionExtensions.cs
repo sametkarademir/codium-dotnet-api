@@ -1,11 +1,15 @@
 using Codium.Template.Domain;
 using Codium.Template.Domain.Repositories;
 using Codium.Template.Domain.Shared.AuditLogs;
+using Codium.Template.Domain.Roles;
 using Codium.Template.Domain.Shared.Repositories;
+using Codium.Template.Domain.Shared.Users;
+using Codium.Template.Domain.Users;
 using Codium.Template.EntityFrameworkCore.Contexts;
 using Codium.Template.EntityFrameworkCore.Extensions;
 using Codium.Template.EntityFrameworkCore.Repositories;
 using Codium.Template.EntityFrameworkCore.Repositories.Common;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -36,6 +40,26 @@ public static class ServiceCollectionExtensions
             opt.UseEntityMetadataTracking();
             opt.UseAuditLog();
         });
+
+        services.AddIdentityCore<User>(options =>
+            {
+                options.Password.RequiredLength = UserConsts.PasswordRequiredLength;
+                options.Password.RequiredUniqueChars = UserConsts.PasswordRequiredUniqueChars;
+                options.Password.RequireDigit = UserConsts.PasswordRequireDigit;
+                options.Password.RequireLowercase = UserConsts.PasswordRequireLowercase;
+                options.Password.RequireUppercase = UserConsts.PasswordRequireUppercase;
+                options.Password.RequireNonAlphanumeric = UserConsts.PasswordRequireNonAlphanumeric;
+
+                options.Lockout.AllowedForNewUsers = UserConsts.AllowedForNewUsers;
+                options.Lockout.MaxFailedAccessAttempts = UserConsts.MaxFailedAccessAttempts;
+                options.Lockout.DefaultLockoutTimeSpan = UserConsts.DefaultLockoutTimeSpanMinutes;
+
+                options.SignIn.RequireConfirmedEmail = UserConsts.RequireConfirmedEmail;
+                options.SignIn.RequireConfirmedPhoneNumber = UserConsts.RequireConfirmedPhoneNumber;
+            })
+            .AddRoles<Role>()
+            .AddRoleManager<RoleManager<Role>>()
+            .AddEntityFrameworkStores<ApplicationDbContext>();
 
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IAuditLogRepository, AuditLogRepository>();

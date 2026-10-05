@@ -119,15 +119,6 @@ public class UserController : ControllerBase
         return NoContent();
     }
     
-    [HttpPatch("{id:guid}/lock")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [PermissionAuthorize(PermissionConsts.User.Lock)]
-    public async Task<IActionResult> LockAsync([FromRoute(Name = "id")] Guid id, CancellationToken cancellationToken = default)
-    {
-        await _userAppService.LockAsync(id, cancellationToken: cancellationToken);
-        return NoContent();
-    }
-    
     [HttpPatch("{id:guid}/unlock")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [PermissionAuthorize(PermissionConsts.User.Unlock)]

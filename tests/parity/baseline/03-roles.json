@@ -1,0 +1,436 @@
+[
+  {
+    "line": 3,
+    "status": 200
+  },
+  {
+    "body": {
+      "data": {
+        "data": [
+          {
+            "id": "<guid>",
+            "name": "Permission.View"
+          },
+          {
+            "id": "<guid>",
+            "name": "Role.AssignPermission"
+          },
+          {
+            "id": "<guid>",
+            "name": "Role.Create"
+          },
+          {
+            "id": "<guid>",
+            "name": "Role.Delete"
+          },
+          {
+            "id": "<guid>",
+            "name": "Role.Detail"
+          },
+          {
+            "id": "<guid>",
+            "name": "Role.UnAssignPermission"
+          },
+          {
+            "id": "<guid>",
+            "name": "Role.Update"
+          },
+          {
+            "id": "<guid>",
+            "name": "Role.View"
+          },
+          {
+            "id": "<guid>",
+            "name": "User.AssignRole"
+          },
+          {
+            "id": "<guid>",
+            "name": "User.Create"
+          },
+          {
+            "id": "<guid>",
+            "name": "User.Delete"
+          },
+          {
+            "id": "<guid>",
+            "name": "User.Detail"
+          },
+          {
+            "id": "<guid>",
+            "name": "User.Lock"
+          },
+          {
+            "id": "<guid>",
+            "name": "User.ResetPassword"
+          },
+          {
+            "id": "<guid>",
+            "name": "User.UnAssignRole"
+          },
+          {
+            "id": "<guid>",
+            "name": "User.Unlock"
+          },
+          {
+            "id": "<guid>",
+            "name": "User.Update"
+          },
+          {
+            "id": "<guid>",
+            "name": "User.View"
+          }
+        ],
+        "meta": {
+          "currentPage": 1,
+          "isFirstPage": true,
+          "isLastPage": true,
+          "nextPage": null,
+          "perPage": 100,
+          "previousPage": null,
+          "totalCount": 18,
+          "totalPages": 1
+        }
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 11,
+    "status": 200
+  },
+  {
+    "body": {
+      "data": {
+        "data": [
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "Permission.View"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "Role.AssignPermission"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "Role.Create"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "Role.Delete"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "Role.Detail"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "Role.UnAssignPermission"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "Role.Update"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "Role.View"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "User.AssignRole"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "User.Create"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "User.Delete"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "User.Detail"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "User.Lock"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "User.ResetPassword"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "User.UnAssignRole"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "User.Unlock"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "User.Update"
+          },
+          {
+            "attributes": {},
+            "id": "<guid>",
+            "label": "User.View"
+          }
+        ]
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 17,
+    "status": 200
+  },
+  {
+    "line": 26,
+    "status": 204
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:CONFLICT",
+      "Message": "Role with name 'PARITY-<sfx>' already exists",
+      "StatusCode": 409
+    },
+    "line": 33,
+    "status": 409,
+    "status_duplicate_role": 409
+  },
+  {
+    "body": {
+      "data": {
+        "data": [
+          {
+            "description": "parity role",
+            "id": "<guid>",
+            "name": "Parity-<sfx>",
+            "permissions": []
+          }
+        ],
+        "meta": {
+          "currentPage": 1,
+          "isFirstPage": true,
+          "isLastPage": true,
+          "nextPage": null,
+          "perPage": 10,
+          "previousPage": null,
+          "totalCount": 1,
+          "totalPages": 1
+        }
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 42,
+    "status": 200
+  },
+  {
+    "body": {
+      "data": {
+        "data": [
+          {
+            "attributes": {
+              "description": "parity role"
+            },
+            "id": "<guid>",
+            "label": "Parity-<sfx>"
+          }
+        ]
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 51,
+    "status": 200
+  },
+  {
+    "body": {
+      "data": {
+        "description": "parity role",
+        "id": "<guid>",
+        "name": "Parity-<sfx>",
+        "permissions": []
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 57,
+    "status": 200
+  },
+  {
+    "line": 63,
+    "status": 204
+  },
+  {
+    "body": {
+      "data": {
+        "description": "updated",
+        "id": "<guid>",
+        "name": "Parity2-<sfx>",
+        "permissions": []
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 69,
+    "status": 200
+  },
+  {
+    "line": 76,
+    "status": 204
+  },
+  {
+    "body": {
+      "data": {
+        "description": "updated",
+        "id": "<guid>",
+        "name": "Parity2-<sfx>",
+        "permissions": [
+          {
+            "id": "<guid>",
+            "name": "Permission.View"
+          },
+          {
+            "id": "<guid>",
+            "name": "Role.AssignPermission"
+          }
+        ]
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 82,
+    "status": 200
+  },
+  {
+    "line": 89,
+    "status": 204
+  },
+  {
+    "line": 95,
+    "status": 200
+  },
+  {
+    "line": 101,
+    "status": 204
+  },
+  {
+    "body": {
+      "data": {
+        "accessFailedCount": 0,
+        "email": "r-<sfx>@example.com",
+        "emailConfirmed": true,
+        "firstName": null,
+        "id": "<guid>",
+        "isActive": true,
+        "lastName": null,
+        "lockoutEnabled": true,
+        "lockoutEnd": null,
+        "passwordChangedTime": null,
+        "phoneNumber": null,
+        "phoneNumberConfirmed": false,
+        "roles": [
+          {
+            "description": null,
+            "id": "<guid>",
+            "name": "Parity2-<sfx>",
+            "permissions": []
+          }
+        ],
+        "twoFactorEnabled": false
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 107,
+    "status": 200
+  },
+  {
+    "line": 114,
+    "status": 200
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:FORBIDDEN",
+      "Message": "An error occurred in the application.",
+      "StatusCode": 403
+    },
+    "line": 122,
+    "status": 403,
+    "status_forbidden": 403
+  },
+  {
+    "line": 130,
+    "status": 204
+  },
+  {
+    "body": {
+      "data": {
+        "accessFailedCount": 0,
+        "email": "r-<sfx>@example.com",
+        "emailConfirmed": true,
+        "firstName": null,
+        "id": "<guid>",
+        "isActive": true,
+        "lastName": null,
+        "lockoutEnabled": true,
+        "lockoutEnd": null,
+        "passwordChangedTime": null,
+        "phoneNumber": null,
+        "phoneNumberConfirmed": false,
+        "roles": [],
+        "twoFactorEnabled": false
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 136,
+    "status": 200
+  },
+  {
+    "line": 143,
+    "status": 204
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:ENTITY:NOT_FOUND",
+      "Message": "There is no such an entity given id. Entity type: Codium.Template.Domain.Roles.Role",
+      "StatusCode": 404
+    },
+    "line": 147,
+    "status": 404,
+    "status_role_get_deleted": 404
+  },
+  {
+    "line": 154,
+    "status": 204,
+    "status_reuse_deleted_role": 204
+  },
+  {
+    "line": 163,
+    "status": 401
+  }
+]

@@ -18,8 +18,7 @@ public interface IUserAppService
     Task TogglePhoneNumberConfirmationAsync(Guid id, CancellationToken cancellationToken = default);
     Task ToggleTwoFactorEnabledAsync(Guid id, CancellationToken cancellationToken = default);
     Task ToggleIsActiveAsync(Guid id, CancellationToken cancellationToken = default);
-    
-    Task LockAsync(Guid id, DateTimeOffset? lockoutEnd = null, CancellationToken cancellationToken = default);
+
     Task UnlockAsync(Guid id, CancellationToken cancellationToken = default);
     
     Task ResetPasswordAsync(Guid id, ResetPasswordUserRequestDto request, CancellationToken cancellationToken = default);

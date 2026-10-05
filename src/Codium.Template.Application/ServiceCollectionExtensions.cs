@@ -73,8 +73,8 @@ public static class ServiceCollectionExtensions
         services.AddHangfireServiceRegistration(configuration);
 
         services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+        services.AddScoped<SignInManager<User>>();
         services.AddScoped<ICurrentUser, CurrentUser>();
-        services.AddScoped<IPasswordValidator, PasswordValidator>();
         services.AddScoped<IJwtTokenAppService, JwtTokenAppService>();
         services.AddScoped<IAuthAppService, AuthAppService>();
         services.AddScoped<IPermissionAppService, PermissionAppService>();

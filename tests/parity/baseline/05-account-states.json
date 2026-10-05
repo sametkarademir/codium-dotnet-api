@@ -1,0 +1,185 @@
+[
+  {
+    "line": 3,
+    "status": 200
+  },
+  {
+    "line": 11,
+    "status": 204
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:FORBIDDEN",
+      "Message": "User account is inactive",
+      "StatusCode": 403
+    },
+    "line": 17,
+    "status": 403,
+    "status_inactive": 403
+  },
+  {
+    "line": 26,
+    "status": 204
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:FORBIDDEN",
+      "Message": "Email address is not confirmed",
+      "StatusCode": 403
+    },
+    "line": 32,
+    "status": 403,
+    "status_unconfirmed": 403
+  },
+  {
+    "line": 41,
+    "status": 204
+  },
+  {
+    "line": 47,
+    "status": 401,
+    "status_fail_1": 401
+  },
+  {
+    "line": 54,
+    "status": 401,
+    "status_fail_2": 401
+  },
+  {
+    "line": 61,
+    "status": 401,
+    "status_fail_3": 401
+  },
+  {
+    "line": 68,
+    "status": 401,
+    "status_fail_4": 401
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:FORBIDDEN",
+      "Message": "Account is locked due to too many failed login attempts",
+      "StatusCode": 403
+    },
+    "line": 75,
+    "status": 403,
+    "status_fail_5": 403
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:FORBIDDEN",
+      "Message": "Account is locked due to too many failed login attempts",
+      "StatusCode": 403
+    },
+    "line": 84,
+    "status": 403,
+    "status_locked_correct_password": 403
+  },
+  {
+    "body": {
+      "data": {
+        "data": [
+          {
+            "accessFailedCount": 0,
+            "email": "l-<sfx>@example.com",
+            "emailConfirmed": true,
+            "firstName": null,
+            "id": "<guid>",
+            "isActive": true,
+            "lastName": null,
+            "lockoutEnabled": true,
+            "lockoutEnd": "<time>",
+            "passwordChangedTime": null,
+            "phoneNumber": null,
+            "phoneNumberConfirmed": false,
+            "roles": [],
+            "twoFactorEnabled": false
+          }
+        ],
+        "meta": {
+          "currentPage": 1,
+          "isFirstPage": true,
+          "isLastPage": true,
+          "nextPage": null,
+          "perPage": 10,
+          "previousPage": null,
+          "totalCount": 1,
+          "totalPages": 1
+        }
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 92,
+    "status": 200
+  },
+  {
+    "line": 100,
+    "status": 204
+  },
+  {
+    "body": {
+      "data": {
+        "accessToken": "<masked>",
+        "expiryTime": "<masked>",
+        "refreshToken": "<masked>"
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 104,
+    "status": 200,
+    "status_after_unlock": 200
+  },
+  {
+    "line": 113,
+    "status": 204
+  },
+  {
+    "line": 119,
+    "status": 200
+  },
+  {
+    "line": 126,
+    "status": 200
+  },
+  {
+    "line": 131,
+    "status": 200
+  },
+  {
+    "line": 136,
+    "status": 200
+  },
+  {
+    "line": 141,
+    "status": 200
+  },
+  {
+    "body": {
+      "data": {
+        "accessToken": "<masked>",
+        "expiryTime": "<masked>",
+        "refreshToken": "<masked>"
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 146,
+    "status": 200,
+    "status_sixth_login": 200
+  },
+  {
+    "line": 155,
+    "status": 200,
+    "status_first_session_after_sixth_login": 200
+  }
+]

@@ -31,7 +31,10 @@
             "**/obj/**",
             "**/*.user",
             "**/.vs/**",
-            ".git/**"
+            "**/.idea/**",
+            ".git/**",
+            "specs/**",
+            ".specify/feature.json"
           ]
         }
       ],

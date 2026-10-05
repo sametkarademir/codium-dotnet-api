@@ -1,0 +1,115 @@
+[
+  {
+    "body": {
+      "data": {
+        "accessToken": "<masked>",
+        "expiryTime": "<masked>",
+        "refreshToken": "<masked>"
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 5,
+    "status": 200
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:UNAUTHORIZED",
+      "Message": "Invalid email or password",
+      "StatusCode": 401
+    },
+    "line": 20,
+    "status": 401,
+    "status_wrong_password": 401
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:UNAUTHORIZED",
+      "Message": "Invalid email or password",
+      "StatusCode": 401
+    },
+    "line": 29,
+    "status": 401,
+    "status_unknown_email": 401
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": [
+        {
+          "Errors": [
+            "Email format is invalid"
+          ],
+          "Property": "Email"
+        },
+        {
+          "Errors": [
+            "Password must be at least 8 characters long"
+          ],
+          "Property": "Password"
+        }
+      ],
+      "ErrorCode": "APP:VALIDATION",
+      "Message": "\n -- Email: Email format is invalid\n -- Password: Password must be at least 8 characters long",
+      "StatusCode": 400
+    },
+    "line": 38,
+    "status": 400
+  },
+  {
+    "body": {
+      "data": {
+        "accessToken": "<masked>",
+        "expiryTime": "<masked>",
+        "refreshToken": "<masked>"
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 46,
+    "status": 200,
+    "status_email_case": 200
+  },
+  {
+    "body": {
+      "data": {
+        "accessToken": "<masked>",
+        "expiryTime": "<masked>",
+        "refreshToken": "<masked>"
+      },
+      "error": null,
+      "success": true
+    },
+    "line": 55,
+    "status": 200
+  },
+  {
+    "body": {
+      "CorrelationId": null,
+      "Details": null,
+      "ErrorCode": "APP:UNAUTHORIZED",
+      "Message": "An error occurred in the application.",
+      "StatusCode": 401
+    },
+    "line": 67,
+    "status": 401,
+    "status_refresh_reuse": 401
+  },
+  {
+    "line": 76,
+    "status": 401
+  },
+  {
+    "line": 80,
+    "status": 204
+  },
+  {
+    "line": 85,
+    "status": 401,
+    "status_after_logout": 401
+  }
+]

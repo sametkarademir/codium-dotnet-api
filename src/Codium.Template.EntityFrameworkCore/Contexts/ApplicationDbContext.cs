@@ -1,4 +1,5 @@
 using System.Reflection;
+using Codium.Template.Domain;
 using Codium.Template.Domain.AuditLogs;
 using Codium.Template.Domain.EntityPropertyChanges;
 using Codium.Template.Domain.HttpRequestLogs;
@@ -12,11 +13,21 @@ using Codium.Template.Domain.UserRoles;
 using Codium.Template.Domain.Users;
 using Codium.Template.EntityFrameworkCore.Extensions;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Codium.Template.EntityFrameworkCore.Contexts;
 
-public class ApplicationDbContext : DbContext
+public class ApplicationDbContext : IdentityDbContext<
+    User,
+    Role,
+    Guid,
+    IdentityUserClaim<Guid>,
+    UserRole,
+    IdentityUserLogin<Guid>,
+    IdentityRoleClaim<Guid>,
+    IdentityUserToken<Guid>>
 {
     private readonly IHttpContextAccessor? _httpContextAccessor;
 
@@ -28,10 +39,7 @@ public class ApplicationDbContext : DbContext
     public DbSet<Permission> Permissions { get; set; }
     public DbSet<RefreshToken> RefreshTokens { get; set; }
     public DbSet<RolePermission> RolePermissions { get; set; }
-    public DbSet<Role> Roles { get; set; }
     public DbSet<Session> Sessions { get; set; }
-    public DbSet<UserRole> UserRoles { get; set; }
-    public DbSet<User> Users { get; set; }
     
     public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, IHttpContextAccessor? httpContextAccessor = null)
         : base(options)
@@ -42,6 +50,12 @@ public class ApplicationDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+
+        // Claims, logins and tokens are created by Identity but unused in this phase; keep them in the template's naming scheme.
+        builder.Entity<IdentityUserClaim<Guid>>().ToTable(ApplicationConsts.DbTablePrefix + "UserClaims", ApplicationConsts.DbSchema);
+        builder.Entity<IdentityRoleClaim<Guid>>().ToTable(ApplicationConsts.DbTablePrefix + "RoleClaims", ApplicationConsts.DbSchema);
+        builder.Entity<IdentityUserLogin<Guid>>().ToTable(ApplicationConsts.DbTablePrefix + "UserLogins", ApplicationConsts.DbSchema);
+        builder.Entity<IdentityUserToken<Guid>>().ToTable(ApplicationConsts.DbTablePrefix + "UserTokens", ApplicationConsts.DbSchema);
 
         builder.ApplyConfigurationsFromAssembly(Assembly.GetExecutingAssembly());
         builder.ApplyMultiTenantQueryFilters(this);

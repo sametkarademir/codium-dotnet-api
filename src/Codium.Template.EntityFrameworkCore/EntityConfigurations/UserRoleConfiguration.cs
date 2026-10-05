@@ -12,16 +12,14 @@ public class UserRoleConfiguration : IEntityTypeConfiguration<UserRole>
     {
         builder.ApplyGlobalEntityConfigurations();
         builder.ToTable(ApplicationConsts.DbTablePrefix + "UserRoles", ApplicationConsts.DbSchema);
-        builder.HasIndex(item => new {item.RoleId, item.UserId})
-            .IsUnique()
-            .HasFilter($"\"{nameof(UserRole.IsDeleted)}\" = FALSE");
-        
+        builder.HasKey(item => new { item.UserId, item.RoleId });
+
         builder.HasOne(item => item.User)
             .WithMany(item => item.UserRoles)
             .HasForeignKey(item => item.UserId)
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
-        
+
         builder.HasOne(item => item.Role)
             .WithMany(item => item.UserRoles)
             .HasForeignKey(item => item.RoleId)

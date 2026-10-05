@@ -6,7 +6,6 @@ using Codium.Template.Domain.Shared.Extensions;
 using Codium.Template.Domain.Shared.Permissions;
 using Codium.Template.Domain.Shared.Repositories;
 using Codium.Template.Domain.Shared.Roles;
-using Codium.Template.Domain.UserRoles;
 using Codium.Template.Domain.Users;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -14,13 +13,11 @@ using Microsoft.Extensions.Logging;
 namespace Codium.Template.Domain;
 
 public class DevelopmentDataSeederContributor(
-    IUserRepository userRepository,
-    IRoleRepository roleRepository,
-    IUserRoleRepository userRoleRepository,
+    UserManager<User> userManager,
+    RoleManager<Role> roleManager,
     IPermissionRepository permissionRepository,
     IRolePermissionRepository rolePermissionRepository,
     IUnitOfWork unitOfWork,
-    IPasswordHasher<User> passwordHasher,
     ILogger<DevelopmentDataSeederContributor> logger)
 {
     public async Task SeedAsync()
@@ -33,7 +30,7 @@ public class DevelopmentDataSeederContributor(
             await SyncPermissionsAsync();
             var adminRole = await EnsureAdminRoleAsync();
             await SyncAdminRolePermissionsAsync(adminRole);
-            await EnsureAdminUserAsync(adminRole);
+            await EnsureAdminUserAsync();
 
             await unitOfWork.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -120,12 +117,7 @@ public class DevelopmentDataSeederContributor(
 
     private async Task<Role> EnsureAdminRoleAsync()
     {
-        var normalizedAdminRoleName = RoleConsts.Admin.NormalizeValue();
-
-        var existingAdminRole = await roleRepository.SingleOrDefaultAsync(
-            predicate: r => r.NormalizedName == normalizedAdminRoleName,
-            enableTracking: false
-        );
+        var existingAdminRole = await roleManager.FindByNameAsync(RoleConsts.Admin);
         if (existingAdminRole != null)
         {
             return existingAdminRole;
@@ -134,11 +126,9 @@ public class DevelopmentDataSeederContributor(
         var newAdminRole = new Role
         {
             Id = Guid.NewGuid(),
-            Name = RoleConsts.Admin,
-            NormalizedName = normalizedAdminRoleName
+            Name = RoleConsts.Admin
         };
-        await roleRepository.AddAsync(newAdminRole);
-        await unitOfWork.SaveChangesAsync();
+        EnsureSucceeded(await roleManager.CreateAsync(newAdminRole), "create the Admin role");
 
         return newAdminRole;
     }
@@ -176,63 +166,43 @@ public class DevelopmentDataSeederContributor(
             missingRolePermissions.Count);
     }
 
-    private async Task EnsureAdminUserAsync(Role adminRole)
+    private async Task EnsureAdminUserAsync()
     {
         const string email = "admin@codium.com";
-        var normalizedEmail = email.NormalizeValue();
+        const string password = "Pp123456*";
 
-        var matchedAdminUser = await userRepository.SingleOrDefaultAsync(
-            predicate: u => u.Email == email,
-            enableTracking: false
-        );
-
-        if (matchedAdminUser != null)
+        var adminUser = await userManager.FindByEmailAsync(email);
+        if (adminUser == null)
         {
-            var hasAdminUserRole = await userRoleRepository.AnyAsync(
-                ur => ur.UserId == matchedAdminUser.Id && ur.RoleId == adminRole.Id);
-
-            if (!hasAdminUserRole)
+            adminUser = new User
             {
-                await userRoleRepository.AddAsync(new UserRole
-                {
-                    Id = Guid.NewGuid(),
-                    RoleId = adminRole.Id,
-                    UserId = matchedAdminUser.Id
-                });
-                await unitOfWork.SaveChangesAsync();
-            }
+                Id = Guid.NewGuid(),
+                UserName = email,
+                Email = email,
+                EmailConfirmed = true,
+                PhoneNumberConfirmed = true,
+                FirstName = "Admin",
+                LastName = "User",
+                IsActive = true
+            };
+            EnsureSucceeded(await userManager.CreateAsync(adminUser, password), "create the admin user");
 
-            return;
+            // CreateAsync turns lockout on for new users; the seeded admin has never been lockable.
+            EnsureSucceeded(await userManager.SetLockoutEnabledAsync(adminUser, false), "disable lockout for the admin user");
         }
 
-        var newUser = new User
+        if (!await userManager.IsInRoleAsync(adminUser, RoleConsts.Admin))
         {
-            Id = Guid.NewGuid(),
-            Email = email,
-            NormalizedEmail = normalizedEmail,
-            EmailConfirmed = true,
-            PhoneNumber = null,
-            PhoneNumberConfirmed = true,
-            TwoFactorEnabled = false,
-            LockoutEnd = null,
-            LockoutEnabled = false,
-            AccessFailedCount = 0,
-            FirstName = "Admin",
-            LastName = "User",
-            PasswordChangedTime = null,
-            IsActive = true
-        };
-        newUser.PasswordHash = passwordHasher.HashPassword(newUser, "Pp123456*");
-        await userRepository.AddAsync(newUser);
+            EnsureSucceeded(await userManager.AddToRoleAsync(adminUser, RoleConsts.Admin), "assign the Admin role to the admin user");
+        }
+    }
 
-        var newUserRole = new UserRole
+    private static void EnsureSucceeded(IdentityResult result, string action)
+    {
+        if (!result.Succeeded)
         {
-            Id = Guid.NewGuid(),
-            RoleId = adminRole.Id,
-            UserId = newUser.Id
-        };
-        await userRoleRepository.AddAsync(newUserRole);
-
-        await unitOfWork.SaveChangesAsync();
+            throw new InvalidOperationException(
+                $"Seeding failed to {action}: {string.Join("; ", result.Errors.Select(e => $"{e.Code} {e.Description}"))}");
+        }
     }
 }

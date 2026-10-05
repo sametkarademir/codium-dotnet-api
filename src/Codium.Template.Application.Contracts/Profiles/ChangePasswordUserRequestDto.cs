@@ -1,3 +1,4 @@
+using Codium.Template.Application.Contracts.Extensions;
 using Codium.Template.Domain.Shared.Localization;
 using Codium.Template.Domain.Shared.Users;
 using FluentValidation;
@@ -24,7 +25,8 @@ public class ChangePasswordUserRequestDtoValidator : AbstractValidator<ChangePas
         RuleFor(item => item.NewPassword)
             .NotEmpty().WithMessage(localizer["ChangePasswordUserRequestDto:Password:IsRequired"])
             .MinimumLength(UserConsts.PasswordRequiredLength).WithMessage(localizer["ChangePasswordUserRequestDto:Password:MinLength", UserConsts.PasswordRequiredLength])
-            .MaximumLength(UserConsts.PasswordMaxLength).WithMessage(localizer["ChangePasswordUserRequestDto:Password:MaxLength", UserConsts.PasswordMaxLength]);
+            .MaximumLength(UserConsts.PasswordMaxLength).WithMessage(localizer["ChangePasswordUserRequestDto:Password:MaxLength", UserConsts.PasswordMaxLength])
+            .MustSatisfyPasswordPolicy(localizer);
         
         RuleFor(item => item.ConfirmNewPassword)
             .Equal(item => item.NewPassword).WithMessage(localizer["ChangePasswordUserRequestDto:PasswordConfirm:MustMatchPassword"]);

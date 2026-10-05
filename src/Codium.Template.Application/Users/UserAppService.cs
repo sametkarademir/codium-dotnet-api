@@ -3,16 +3,15 @@ using Codium.Template.Application.BackgroundJobs.InvalidateAllSessions;
 using Codium.Template.Application.Contracts.BackgroundJobs;
 using Codium.Template.Application.Contracts.BackgroundJobs.InvalidateAllSessions;
 using Codium.Template.Application.Contracts.Common;
+using Codium.Template.Application.Contracts.Extensions;
 using Codium.Template.Application.Contracts.Roles;
 using Codium.Template.Application.Contracts.Users;
-using Codium.Template.Domain.Repositories;
+using Codium.Template.Domain.Roles;
 using Codium.Template.Domain.Shared.BaseEntities.Abstractions;
 using Codium.Template.Domain.Shared.Exceptions.Types;
 using Codium.Template.Domain.Shared.Extensions;
 using Codium.Template.Domain.Shared.Repositories;
 using Codium.Template.Domain.Shared.Result;
-using Codium.Template.Domain.Shared.Users;
-using Codium.Template.Domain.UserRoles;
 using Codium.Template.Domain.Users;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -23,34 +22,29 @@ namespace Codium.Template.Application.Users;
 
 public class UserAppService : IUserAppService
 {
-    private readonly IUserRepository _userRepository;
-    private readonly IRoleRepository _roleRepository;
-    private readonly IUserRoleRepository _userRoleRepository;
+    private readonly UserManager<User> _userManager;
+    private readonly RoleManager<Role> _roleManager;
     private readonly IUnitOfWork _unitOfWork;
-    private readonly IPasswordValidator _passwordValidator;
-    private readonly IPasswordHasher<User> _passwordHasher;
+    private readonly ILookupNormalizer _lookupNormalizer;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IMapper _mapper;
     private readonly IBackgroundJobExecutor _backgroundJobExecutor;
     private readonly IStringLocalizer<UserAppService> _localizer;
 
-    public UserAppService(IUserRepository userRepository,
-        IRoleRepository roleRepository,
-        IUserRoleRepository userRoleRepository,
+    public UserAppService(
+        UserManager<User> userManager,
+        RoleManager<Role> roleManager,
         IUnitOfWork unitOfWork,
-        IPasswordValidator passwordValidator,
-        IPasswordHasher<User> passwordHasher,
+        ILookupNormalizer lookupNormalizer,
         IHttpContextAccessor httpContextAccessor,
         IMapper mapper,
         IBackgroundJobExecutor backgroundJobExecutor,
         IStringLocalizer<UserAppService> localizer)
     {
-        _userRepository = userRepository;
-        _roleRepository = roleRepository;
-        _userRoleRepository = userRoleRepository;
+        _userManager = userManager;
+        _roleManager = roleManager;
         _unitOfWork = unitOfWork;
-        _passwordValidator = passwordValidator;
-        _passwordHasher = passwordHasher;
+        _lookupNormalizer = lookupNormalizer;
         _httpContextAccessor = httpContextAccessor;
         _mapper = mapper;
         _backgroundJobExecutor = backgroundJobExecutor;
@@ -59,19 +53,19 @@ public class UserAppService : IUserAppService
 
     public async Task<Result<UserResponseDto>> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            include: q => q
-                .Include(u => u.UserRoles)
-                .ThenInclude(ur => ur.Role)!,
-            enableTracking: false,
-            cancellationToken: cancellationToken
-        );
+        var matchedUser = await GetActiveUsers(enableTracking: false)
+            .Include(u => u.UserRoles)
+            .ThenInclude(ur => ur.Role)
+            .SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
+        if (matchedUser == null)
+        {
+            throw new AppEntityNotFoundException(typeof(User));
+        }
 
         var mappedUser = new UserResponseDto
         {
             Id = matchedUser.Id,
-            Email = matchedUser.Email,
+            Email = matchedUser.Email!,
             EmailConfirmed = matchedUser.EmailConfirmed,
             PhoneNumber = matchedUser.PhoneNumber,
             PhoneNumberConfirmed = matchedUser.PhoneNumberConfirmed,
@@ -86,7 +80,7 @@ public class UserAppService : IUserAppService
             Roles = matchedUser.UserRoles.Select(ur => new RoleResponseDto
             {
                 Id = ur.Role!.Id,
-                Name = ur.Role!.Name
+                Name = ur.Role!.Name!
             }).ToList()
         };
 
@@ -95,14 +89,16 @@ public class UserAppService : IUserAppService
 
     public async Task<Result<ListResultDto<OptionResponseDto<Guid>>>> GetAllAsOptionsAsync(GetOptionsRequestDto request, CancellationToken cancellationToken = default)
     {
-        var matchedUsers = await _userRepository.GetAllAsync(
-            predicate: !string.IsNullOrWhiteSpace(request.Search)
-                ? u => u.NormalizedEmail.Contains(request.Search.NormalizeValue())
-                : null,
-            orderBy: q => q.OrderBy(u => u.NormalizedEmail),
-            enableTracking: false,
-            cancellationToken: cancellationToken
-        );
+        var queryable = GetActiveUsers(enableTracking: false);
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var normalizedSearch = _lookupNormalizer.NormalizeEmail(request.Search)!;
+            queryable = queryable.Where(u => u.NormalizedEmail!.Contains(normalizedSearch));
+        }
+
+        var matchedUsers = await queryable
+            .OrderBy(u => u.NormalizedEmail)
+            .ToListAsync(cancellationToken);
 
         var options = _mapper.Map<List<OptionResponseDto<Guid>>>(matchedUsers);
 
@@ -111,15 +107,15 @@ public class UserAppService : IUserAppService
 
     public async Task<Result<PagedResult<UserResponseDto>>> GetPageableAndFilterAsync(GetListUsersRequestDto request, CancellationToken cancellationToken = default)
     {
-        var queryable = _userRepository.AsQueryable();
+        var queryable = GetActiveUsers(enableTracking: false);
 
         queryable = queryable.WhereIf(request.IsActive.HasValue, u => u.IsActive == request.IsActive!.Value);
-        queryable = queryable.WhereIf(
-            !string.IsNullOrWhiteSpace(request.Search),
-            u => u.NormalizedEmail.Contains(request.Search!.NormalizeValue())
-        );
+        if (!string.IsNullOrWhiteSpace(request.Search))
+        {
+            var normalizedSearch = _lookupNormalizer.NormalizeEmail(request.Search)!;
+            queryable = queryable.Where(u => u.NormalizedEmail!.Contains(normalizedSearch));
+        }
 
-        queryable = queryable.AsNoTracking();
         queryable = queryable.ApplySort(request.GetSortRequest(nameof(CreationAuditedEntity.CreationTime)));
         var pagedUsers = await queryable.ToPageableAsync(request.Page, request.PerPage, cancellationToken);
 
@@ -131,183 +127,98 @@ public class UserAppService : IUserAppService
 
     public async Task CreateAsync(CreateUserRequestDto request, CancellationToken cancellationToken = default)
     {
-        var existingUser = await _userRepository.ExistsByEmailAsync(request.Email, cancellationToken: cancellationToken);
-        if (existingUser)
+        var existingUser = await _userManager.FindByEmailAsync(request.Email);
+        if (existingUser != null)
         {
             throw new AppConflictException(_localizer["UserAppService:CreateAsync:Exists", request.Email]);
-        }
-
-        var passwordValidatorResult = _passwordValidator.Validate(request.Password);
-        if (!passwordValidatorResult.Succeeded)
-        {
-            throw new AppValidationException(passwordValidatorResult.Errors);
         }
 
         var newUser = new User
         {
             Id = Guid.NewGuid(),
+            UserName = request.Email,
             Email = request.Email,
-            NormalizedEmail = request.Email.NormalizeValue(),
             EmailConfirmed = request.EmailConfirmed,
             PhoneNumber = request.PhoneNumber,
             PhoneNumberConfirmed = request.PhoneNumberConfirmed,
             TwoFactorEnabled = request.TwoFactorEnabled,
-            LockoutEnd = null,
-            AccessFailedCount = 0,
             FirstName = request.FirstName,
             LastName = request.LastName,
-            IsActive = request.IsActive
+            IsActive = request.IsActive,
+            ShouldChangePasswordOnNextLogin = true
         };
-        
-        newUser.PasswordHash = _passwordHasher.HashPassword(newUser, request.Password);
-        newUser.LockoutEnabled = UserConsts.AllowedForNewUsers;
-        
-        await _userRepository.AddAsync(newUser, cancellationToken);
+
+        var result = await _userManager.CreateAsync(newUser, request.Password);
+        result.ThrowIfFailed(_localizer["UserAppService:CreateAsync:Exists", request.Email]);
     }
 
     public async Task UpdateAsync(Guid id, UpdateUserRequestDto request, CancellationToken cancellationToken = default)
     {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
+        var matchedUser = await GetActiveUserAsync(id, cancellationToken);
 
         matchedUser.PhoneNumber = request.PhoneNumber;
         matchedUser.FirstName = request.FirstName;
         matchedUser.LastName = request.LastName;
         matchedUser.IsActive = request.IsActive;
-        matchedUser.EmailConfirmed = request.EmailConfirmed;
-        matchedUser.PhoneNumberConfirmed = request.PhoneNumberConfirmed;
-        matchedUser.TwoFactorEnabled = request.TwoFactorEnabled;
 
-        await _userRepository.UpdateAsync(matchedUser, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        (await _userManager.UpdateAsync(matchedUser)).ThrowIfFailed();
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await _userRepository.DeleteAsync(id, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-    }
-
-    public async Task AddToRoleAsync(Guid id, Guid roleId, CancellationToken cancellationToken = default)
-    {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
-        
-        var matchedRole = await _roleRepository.GetAsync(
-            predicate: r => r.Id == roleId,
-            enableTracking: false,
-            cancellationToken: cancellationToken
-        );
-        
-        var existingUserRole = await _userRoleRepository.AnyAsync(
-            predicate: ur => 
-                ur.UserId == matchedUser.Id && 
-                ur.RoleId == matchedRole.Id,
-            cancellationToken: cancellationToken
-        );
-        
-        if (existingUserRole)
+        var matchedUser = await GetActiveUsers(enableTracking: true)
+            .SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
+        if (matchedUser == null)
         {
-            throw new AppConflictException(_localizer["UserAppService:AddToRoleAsync:Exists"]);
+            throw new AppEntityNotFoundException(typeof(User), id);
         }
-        
-        var newUserRole = new UserRole
-        {
-            UserId = matchedUser.Id,
-            RoleId = matchedRole.Id
-        };
-        
-        await _userRoleRepository.AddAsync(newUserRole, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-    }
 
-    public async Task RemoveFromRoleAsync(Guid id, Guid roleId, CancellationToken cancellationToken = default)
-    {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
+        matchedUser.IsDeleted = true;
+        matchedUser.DeletionTime = DateTime.UtcNow;
 
-        var matchedRole = await _roleRepository.GetAsync(
-            predicate: r => r.Id == roleId,
-            enableTracking: false,
-            cancellationToken: cancellationToken
-        );
-
-        var matchedUserRole = await _userRoleRepository.GetAsync(
-            predicate: ur =>
-                ur.RoleId == matchedRole.Id &&
-                ur.UserId == matchedUser.Id,
-            cancellationToken: cancellationToken
-        );
-        
-        if (matchedUserRole == null)
-        {
-            throw new AppConflictException(_localizer["UserAppService:RemoveFromRoleAsync:NotFound"]);
-        }
-        
-        await _userRoleRepository.DeleteAsync(matchedUserRole, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        (await _userManager.UpdateAsync(matchedUser)).ThrowIfFailed();
     }
 
     public async Task SyncRolesAsync(Guid id, SyncUserRolesRequestDto request, CancellationToken cancellationToken = default)
     {
         await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
-        
+
         try
         {
-            var matchedUser = await _userRepository.GetAsync(
-                predicate: u => u.Id == id,
-                include: q => q.Include(u => u.UserRoles),
-                enableTracking: true,
-                cancellationToken: cancellationToken
-            );
+            var matchedUser = await GetActiveUserAsync(id, cancellationToken);
 
-            var currentRoleIds = matchedUser.UserRoles.Select(ur => ur.RoleId).ToList();
-            
-            var rolesToAdd = request.RoleIds.Except(currentRoleIds).ToList();
-            var rolesToRemove = currentRoleIds.Except(request.RoleIds).ToList();
+            var currentRoles = await _roleManager.Roles
+                .Where(r => !r.IsDeleted && r.UserRoles.Any(ur => ur.UserId == matchedUser.Id))
+                .ToListAsync(cancellationToken);
+            var currentRoleIds = currentRoles.Select(r => r.Id).ToList();
 
-            if (rolesToAdd.Any())
+            var roleIdsToAdd = request.RoleIds.Except(currentRoleIds).ToList();
+            var roleIdsToRemove = currentRoleIds.Except(request.RoleIds).ToList();
+
+            if (roleIdsToAdd.Any())
             {
-                var existingRoles = await _roleRepository.GetAllAsync(
-                    predicate: r => rolesToAdd.Contains(r.Id),
-                    enableTracking: false,
-                    cancellationToken: cancellationToken
-                );
+                var rolesToAdd = await _roleManager.Roles
+                    .Where(r => !r.IsDeleted && roleIdsToAdd.Contains(r.Id))
+                    .ToListAsync(cancellationToken);
 
-                if (existingRoles.Count != rolesToAdd.Count)
+                if (rolesToAdd.Count != roleIdsToAdd.Count)
                 {
                     throw new AppEntityNotFoundException(_localizer["UserAppService:SyncRolesAsync:MissingRoles"]);
                 }
 
-                var newUserRoles = rolesToAdd.Select(roleId => new UserRole
-                {
-                    UserId = matchedUser.Id,
-                    RoleId = roleId
-                }).ToList();
-
-                await _userRoleRepository.AddRangeAsync(newUserRoles, cancellationToken: cancellationToken);
+                (await _userManager.AddToRolesAsync(matchedUser, rolesToAdd.Select(r => r.Name!))).ThrowIfFailed();
             }
 
-            if (rolesToRemove.Any())
+            if (roleIdsToRemove.Any())
             {
-                var userRolesToRemove = matchedUser.UserRoles
-                    .Where(ur => rolesToRemove.Contains(ur.RoleId))
-                    .ToList();
+                var roleNamesToRemove = currentRoles
+                    .Where(r => roleIdsToRemove.Contains(r.Id))
+                    .Select(r => r.Name!);
 
-                await _userRoleRepository.DeleteRangeAsync(userRolesToRemove, cancellationToken);
+                (await _userManager.RemoveFromRolesAsync(matchedUser, roleNamesToRemove)).ThrowIfFailed();
             }
 
             await transaction.CommitAsync(cancellationToken);
-            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }
         catch
         {
@@ -318,121 +229,107 @@ public class UserAppService : IUserAppService
 
     public async Task ToggleEmailConfirmationAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
-        
+        var matchedUser = await GetActiveUserAsync(id, cancellationToken);
+
         matchedUser.EmailConfirmed = !matchedUser.EmailConfirmed;
-        await _userRepository.UpdateAsync(matchedUser, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        (await _userManager.UpdateAsync(matchedUser)).ThrowIfFailed();
     }
 
     public async Task TogglePhoneNumberConfirmationAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
-        
+        var matchedUser = await GetActiveUserAsync(id, cancellationToken);
+
         matchedUser.PhoneNumberConfirmed = !matchedUser.PhoneNumberConfirmed;
-        await _userRepository.UpdateAsync(matchedUser, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        (await _userManager.UpdateAsync(matchedUser)).ThrowIfFailed();
     }
 
     public async Task ToggleTwoFactorEnabledAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
-        
-        matchedUser.TwoFactorEnabled = !matchedUser.TwoFactorEnabled;
-        await _userRepository.UpdateAsync(matchedUser, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var matchedUser = await GetActiveUserAsync(id, cancellationToken);
+
+        (await _userManager.SetTwoFactorEnabledAsync(matchedUser, !matchedUser.TwoFactorEnabled)).ThrowIfFailed();
     }
 
     public async Task ToggleIsActiveAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
-        
-        matchedUser.IsActive = !matchedUser.IsActive;
-        await _userRepository.UpdateAsync(matchedUser, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-    }
+        var matchedUser = await GetActiveUserAsync(id, cancellationToken);
 
-    public async Task LockAsync(Guid id, DateTimeOffset? lockoutEnd = null, CancellationToken cancellationToken = default)
-    {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
-        
-        matchedUser.LockoutEnd = lockoutEnd ?? DateTimeOffset.UtcNow.Add(UserConsts.DefaultLockoutTimeSpanMinutes);
-        
-        await _userRepository.UpdateAsync(matchedUser, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
-        
-        _backgroundJobExecutor.Enqueue<InvalidateAllSessionsBackgroundJob, InvalidateAllSessionsBackgroundJobArgs>(
-            new InvalidateAllSessionsBackgroundJobArgs
-            {
-                UserId = matchedUser.Id,
-                Reason = "User locked out by admin",
-                CorrelationId = _httpContextAccessor.HttpContext?.GetCorrelationId() ?? Guid.NewGuid()
-            }
-        );
+        matchedUser.IsActive = !matchedUser.IsActive;
+        (await _userManager.UpdateAsync(matchedUser)).ThrowIfFailed();
     }
 
     public async Task UnlockAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
-        
-        matchedUser.LockoutEnd = null;
-        matchedUser.AccessFailedCount = 0;
-        
-        await _userRepository.UpdateAsync(matchedUser, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var matchedUser = await GetActiveUserAsync(id, cancellationToken);
+
+        // Nothing can be locked when lockout is disabled for the user, so there is nothing to clear.
+        if (!matchedUser.LockoutEnabled)
+        {
+            return;
+        }
+
+        await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            (await _userManager.SetLockoutEndDateAsync(matchedUser, null)).ThrowIfFailed();
+            (await _userManager.ResetAccessFailedCountAsync(matchedUser)).ThrowIfFailed();
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     public async Task ResetPasswordAsync(Guid id, ResetPasswordUserRequestDto request, CancellationToken cancellationToken = default)
     {
-        var matchedUser = await _userRepository.GetAsync(
-            predicate: u => u.Id == id,
-            enableTracking: true,
-            cancellationToken: cancellationToken
-        );
-        
-        var passwordValidationResult = _passwordValidator.Validate(request.NewPassword);
-        if (!passwordValidationResult.Succeeded)
-        {
-            throw new AppValidationException(passwordValidationResult.Errors);
-        }
-        
-        matchedUser.PasswordHash = _passwordHasher.HashPassword(matchedUser, request.NewPassword);
-        matchedUser.PasswordChangedTime = DateTime.UtcNow;
-        
-        await _userRepository.UpdateAsync(matchedUser, cancellationToken);
-        await _unitOfWork.SaveChangesAsync(cancellationToken);
+        var matchedUser = await GetActiveUserAsync(id, cancellationToken);
 
-        _backgroundJobExecutor.Enqueue<InvalidateAllSessionsBackgroundJob, InvalidateAllSessionsBackgroundJobArgs>(
-            new InvalidateAllSessionsBackgroundJobArgs
-            {
-                UserId = matchedUser.Id,
-                Reason = "Password reset by admin",
-                CorrelationId = _httpContextAccessor.HttpContext?.GetCorrelationId() ?? Guid.NewGuid()
-            }
-        );
+        await using var transaction = await _unitOfWork.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            matchedUser.PasswordChangedTime = DateTime.UtcNow;
+            matchedUser.ShouldChangePasswordOnNextLogin = true;
+
+            (await _userManager.RemovePasswordAsync(matchedUser)).ThrowIfFailed();
+            (await _userManager.AddPasswordAsync(matchedUser, request.NewPassword)).ThrowIfFailed();
+
+            await transaction.CommitAsync(cancellationToken);
+
+            _backgroundJobExecutor.Enqueue<InvalidateAllSessionsBackgroundJob, InvalidateAllSessionsBackgroundJobArgs>(
+                new InvalidateAllSessionsBackgroundJobArgs
+                {
+                    UserId = matchedUser.Id,
+                    Reason = "Password reset by admin",
+                    CorrelationId = _httpContextAccessor.HttpContext?.GetCorrelationId() ?? Guid.NewGuid()
+                }
+            );
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    /// <summary>Users that are not soft-deleted, read through Identity's UserManager.</summary>
+    private IQueryable<User> GetActiveUsers(bool enableTracking)
+    {
+        var queryable = _userManager.Users.Where(u => !u.IsDeleted);
+        return enableTracking ? queryable : queryable.AsNoTracking();
+    }
+
+    private async Task<User> GetActiveUserAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var matchedUser = await GetActiveUsers(enableTracking: true)
+            .SingleOrDefaultAsync(u => u.Id == id, cancellationToken);
+        if (matchedUser == null)
+        {
+            throw new AppEntityNotFoundException(typeof(User));
+        }
+
+        return matchedUser;
     }
 }
