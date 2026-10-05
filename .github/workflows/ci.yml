@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  build_and_test:
+    name: Build and test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore Codium.sln
+
+      - name: Build
+        run: dotnet build Codium.sln --configuration Release --no-restore
+
+      # Unit tests need nothing; integration tests start a PostgreSQL container
+      # through Testcontainers (Docker is available on ubuntu-latest).
+      - name: Test
+        run: dotnet test Codium.sln --configuration Release --no-build --verbosity normal
