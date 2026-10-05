@@ -36,3 +36,98 @@ jobs:
       # through Testcontainers (Docker is available on ubuntu-latest).
       - name: Test
         run: dotnet test Codium.sln --configuration Release --no-build --verbosity normal
+
+  functional_tests:
+    name: Functional tests (Hurl parity)
+    needs: build_and_test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: codium_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d codium_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
+
+    env:
+      ConnectionStrings__Default: "Host=localhost;Port=5432;Database=codium_ci;User ID=postgres;Password=ci;"
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://localhost:5100
+      Serilog__Console__MinimumLevel: Warning
+      Hangfire__CronJobsEnabled: "false"
+      # The parity files log in many times from one client; keep rate limiting enabled (switching it off breaks startup).
+      RateLimiting__GlobalPolicy__PermitLimit: "1000000"
+      RateLimiting__ApiPolicy__PermitLimit: "1000000"
+      RateLimiting__AuthPolicy__PermitLimit: "1000000"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Install Hurl
+        uses: gacts/install-hurl@v1.3.2
+        with:
+          version: 8.0.1
+
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef --version 9.0.14
+
+      # The template ships no migrations: generate a throwaway one so the API can create the schema on a fresh database.
+      - name: Generate a temporary migration
+        run: |
+          dotnet ef migrations add CiParity \
+            -p src/Codium.Template.EntityFrameworkCore \
+            -s src/Codium.Template.HttpApi.Host
+
+      - name: Start the API
+        run: |
+          dotnet run --project src/Codium.Template.HttpApi.Host --no-launch-profile \
+            > /tmp/api.log 2>&1 &
+          echo $! > /tmp/api.pid
+
+      - name: Wait for the API
+        run: |
+          timeout 180 bash -c '
+            until curl -sf http://localhost:5100/openapi/v1.json >/dev/null 2>&1; do
+              kill -0 "$(cat /tmp/api.pid)" 2>/dev/null || {
+                echo "::error::API process exited early"
+                tail -100 /tmp/api.log
+                exit 1
+              }
+              sleep 2
+            done'
+          echo "API is ready."
+
+      # Writes masked snapshots and fails when the API behavior differs from tests/parity/baseline.
+      - name: Run Hurl parity tests
+        run: |
+          tests/parity/run.sh /tmp/parity-current
+          diff -r tests/parity/baseline /tmp/parity-current
+
+      - name: Upload snapshots
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: parity-snapshots
+          path: /tmp/parity-current/
+          if-no-files-found: ignore
+
+      - name: API log
+        if: failure()
+        run: tail -200 /tmp/api.log || true
+
+      - name: Stop the API
+        if: always()
+        run: kill "$(cat /tmp/api.pid)" 2>/dev/null || true
