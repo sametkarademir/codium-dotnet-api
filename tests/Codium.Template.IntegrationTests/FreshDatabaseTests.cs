@@ -35,8 +35,8 @@ public class FreshDatabaseTests(ApiFixture fixture)
         var admin = await context.Users.AsNoTracking().SingleAsync(u => u.Email == ApiClient.AdminEmail);
 
         Assert.Equal(ApiClient.AdminEmail, admin.UserName);
-        Assert.Equal("ADMIN@CODIUM.COM", admin.NormalizedEmail);
-        Assert.Equal("ADMIN@CODIUM.COM", admin.NormalizedUserName);
+        Assert.Equal("ADMIN@EXAMPLE.COM", admin.NormalizedEmail);
+        Assert.Equal("ADMIN@EXAMPLE.COM", admin.NormalizedUserName);
         Assert.False(string.IsNullOrEmpty(admin.SecurityStamp));
         Assert.False(string.IsNullOrEmpty(admin.PasswordHash));
         Assert.False(admin.LockoutEnabled, "the seeded admin has never been lockable");

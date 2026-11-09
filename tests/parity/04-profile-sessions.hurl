@@ -2,7 +2,7 @@
 
 POST {{host}}/api/v1/auth/login
 Content-Type: application/json
-{"email":"admin@codium.com","password":"Pp123456*"}
+{"email":"admin@example.com","password":"Pp123456*"}
 HTTP 200
 [Captures]
 admin: jsonpath "$.data.accessToken"

@@ -4,7 +4,7 @@
 # 1. Admin login succeeds
 POST {{host}}/api/v1/auth/login
 Content-Type: application/json
-{"email":"admin@codium.com","password":"Pp123456*"}
+{"email":"admin@example.com","password":"Pp123456*"}
 HTTP 200
 [Captures]
 access: jsonpath "$.data.accessToken"
@@ -19,7 +19,7 @@ jsonpath "$.data.expiryTime" isInteger
 # 2. Wrong password (valid format) is rejected
 POST {{host}}/api/v1/auth/login
 Content-Type: application/json
-{"email":"admin@codium.com","password":"Wrong1234*"}
+{"email":"admin@example.com","password":"Wrong1234*"}
 HTTP *
 [Captures]
 status_wrong_password: status
@@ -45,7 +45,7 @@ body_validation: body
 # 5. Email casing does not matter
 POST {{host}}/api/v1/auth/login
 Content-Type: application/json
-{"email":"ADMIN@Codium.com","password":"Pp123456*"}
+{"email":"ADMIN@EXAMPLE.COM","password":"Pp123456*"}
 HTTP *
 [Captures]
 status_email_case: status

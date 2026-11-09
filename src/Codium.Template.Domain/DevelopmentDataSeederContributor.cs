@@ -168,7 +168,7 @@ public class DevelopmentDataSeederContributor(
 
     private async Task EnsureAdminUserAsync()
     {
-        const string email = "admin@codium.com";
+        const string email = "admin@example.com";
         const string password = "Pp123456*";
 
         var adminUser = await userManager.FindByEmailAsync(email);

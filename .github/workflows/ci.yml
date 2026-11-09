@@ -27,15 +27,15 @@ jobs:
           dotnet-version: 9.0.x
 
       - name: Restore dependencies
-        run: dotnet restore Codium.sln
+        run: dotnet restore Codium.Template.sln
 
       - name: Build
-        run: dotnet build Codium.sln --configuration Release --no-restore
+        run: dotnet build Codium.Template.sln --configuration Release --no-restore
 
       # Unit tests need nothing; integration tests start a PostgreSQL container
       # through Testcontainers (Docker is available on ubuntu-latest).
       - name: Test
-        run: dotnet test Codium.sln --configuration Release --no-build --verbosity normal
+        run: dotnet test Codium.Template.sln --configuration Release --no-build --verbosity normal
 
   functional_tests:
     name: Functional tests (Hurl parity)
@@ -48,17 +48,17 @@ jobs:
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ci
-          POSTGRES_DB: codium_ci
+          POSTGRES_DB: codium_service_ci
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U postgres -d codium_ci"
+          --health-cmd "pg_isready -U postgres -d codium_service_ci"
           --health-interval 5s
           --health-timeout 5s
           --health-retries 20
 
     env:
-      ConnectionStrings__Default: "Host=localhost;Port=5432;Database=codium_ci;User ID=postgres;Password=ci;"
+      ConnectionStrings__Default: "Host=localhost;Port=5432;Database=codium_service_ci;User ID=postgres;Password=ci;"
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://localhost:5100
       Serilog__Console__MinimumLevel: Warning

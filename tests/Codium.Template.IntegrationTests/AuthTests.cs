@@ -25,7 +25,7 @@ public class AuthTests(ApiFixture fixture)
     [Fact]
     public async Task Login_IsCaseInsensitiveOnEmail()
     {
-        var response = await NewClient().LoginAsync("ADMIN@Codium.com", ApiClient.AdminPassword);
+        var response = await NewClient().LoginAsync("ADMIN@EXAMPLE.COM", ApiClient.AdminPassword);
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 

@@ -9,7 +9,7 @@ namespace Codium.Template.IntegrationTests.Infrastructure;
 /// <summary>Small helper around <see cref="HttpClient"/> for the template's JSON API.</summary>
 public class ApiClient(HttpClient http)
 {
-    public const string AdminEmail = "admin@codium.com";
+    public const string AdminEmail = "admin@example.com";
     public const string AdminPassword = "Pp123456*";
     public const string DefaultPassword = "Test1234*";
 
