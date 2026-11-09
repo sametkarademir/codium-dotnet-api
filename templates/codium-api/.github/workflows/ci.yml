@@ -40,7 +40,8 @@ jobs:
   functional_tests:
     name: Functional tests (Hurl parity)
     needs: build_and_test
-    runs-on: ubuntu-latest
+    # Pinned: the Hurl 8.0.1 binary does not run on ubuntu-26.04 (current ubuntu-latest).
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
