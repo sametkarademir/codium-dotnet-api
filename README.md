@@ -31,7 +31,7 @@ GitHub Packages needs authentication even for reading.
 
    ```bash
    dotnet new install Codium.Templates      # install the latest version
-   dotnet new install Codium.Templates::1.2.0   # a specific version
+   dotnet new install Codium.Templates@1.2.0    # a specific version
    dotnet new update                         # update installed templates
    dotnet new codium -n Acme.Shop
    ```
