@@ -18,6 +18,9 @@ jobs:
   build_and_test:
     name: Build and test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: templates/codium-api
     steps:
       - uses: actions/checkout@v4
 
@@ -41,6 +44,9 @@ jobs:
     name: Functional tests (Hurl parity)
     needs: build_and_test
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: templates/codium-api
 
     services:
       postgres:
