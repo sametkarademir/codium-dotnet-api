@@ -10,9 +10,42 @@ A `dotnet new` template for an N-layer ASP.NET Core Web API (Domain, Application
 | `.github/workflows/` | CI for this repository (builds and tests the template content). |
 | `.claude/`, `.specify/`, `specs/` | Development tooling for working on the template itself. Never shipped. |
 
-## Using the template
+## Installing from GitHub Packages
 
-Local development install (from a clone of this repository):
+The template is published as the NuGet package `Codium.Templates` to GitHub Packages
+(`https://nuget.pkg.github.com/sametkarademir/index.json`) whenever a `v*` tag is pushed.
+GitHub Packages needs authentication even for reading.
+
+1. Create a personal access token (classic) with the `read:packages` scope.
+2. Register the feed once (the clear-text flag is required on macOS/Linux):
+
+   ```bash
+   dotnet nuget add source "https://nuget.pkg.github.com/sametkarademir/index.json" \
+     --name github-sametkarademir \
+     --username sametkarademir \
+     --password <TOKEN> \
+     --store-password-in-clear-text
+   ```
+
+3. Install, update and use:
+
+   ```bash
+   dotnet new install Codium.Templates      # install the latest version
+   dotnet new install Codium.Templates::1.2.0   # a specific version
+   dotnet new update                         # update installed templates
+   dotnet new codium -n Acme.Shop
+   ```
+
+## Releasing
+
+1. Merge your changes to `main` (CI must be green, including the *Template smoke* job).
+2. Tag and push: `git tag v1.2.3 && git push origin v1.2.3`.
+3. The *Release* workflow derives the version from the tag, runs the smoke job on that exact
+   package and then publishes it. Check the result under the repository's *Packages* section.
+
+## Using the template from a clone
+
+Local development install:
 
 ```bash
 dotnet new install ./templates/codium-api
