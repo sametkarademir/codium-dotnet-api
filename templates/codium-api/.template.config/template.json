@@ -1,0 +1,108 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Samet Karademir",
+  "classifications": ["Web", "API", "Codium"],
+  "name": "Codium .NET Template",
+  "description": "A .NET project template for building web APIs with Codium architecture.",
+  "identity": "Codium.Template",
+  "groupIdentity": "Codium.NLayer",
+  "shortName": "codium",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  },
+  "sourceName": "Codium.Template",
+  "preferNameDirectory": true,
+  "forms": {
+    "dbName": {
+      "identifier": "chain",
+      "steps": ["lowerCaseInvariant", "dotToUnderscore"]
+    },
+    "dotToUnderscore": {
+      "identifier": "replace",
+      "pattern": "\\.",
+      "replacement": "_"
+    }
+  },
+  "symbols": {
+    "AdminEmail": {
+      "type": "parameter",
+      "datatype": "string",
+      "defaultValue": "admin@example.com",
+      "replaces": "admin@example.com",
+      "description": "E-mail of the seeded administrator account."
+    },
+    "AdminEmailUpper": {
+      "type": "derived",
+      "valueSource": "AdminEmail",
+      "valueTransform": "upperCaseInvariant",
+      "replaces": "ADMIN@EXAMPLE.COM"
+    },
+    "DbName": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "dbName",
+      "replaces": "codium_service"
+    },
+    "AppDisplayName": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "identity",
+      "replaces": "Codium App"
+    },
+    "ServiceDisplayName": {
+      "type": "derived",
+      "valueSource": "name",
+      "valueTransform": "identity",
+      "replaces": "Codium Service"
+    },
+    "JwtKeyPart1": { "type": "generated", "generator": "guid", "parameters": { "defaultFormat": "n" } },
+    "JwtKeyPart2": { "type": "generated", "generator": "guid", "parameters": { "defaultFormat": "n" } },
+    "JwtKeyPart3": { "type": "generated", "generator": "guid", "parameters": { "defaultFormat": "n" } },
+    "JwtKeyPart4": { "type": "generated", "generator": "guid", "parameters": { "defaultFormat": "n" } },
+    "JwtSigningKey": {
+      "type": "generated",
+      "generator": "join",
+      "parameters": {
+        "symbols": [
+          { "type": "ref", "value": "JwtKeyPart1" },
+          { "type": "ref", "value": "JwtKeyPart2" },
+          { "type": "ref", "value": "JwtKeyPart3" },
+          { "type": "ref", "value": "JwtKeyPart4" }
+        ],
+        "separator": ""
+      },
+      "replaces": "50488eb4944b1ede9c7e5db1af4dd5a08521fab2617b075b698f4e923a1adb550d22a1f87a06bc12aa272e48d685921b0aed962c1683a7a116bb834bd1975294"
+    },
+    "HangfirePasswordPart1": { "type": "generated", "generator": "guid", "parameters": { "defaultFormat": "n" } },
+    "HangfirePasswordPart2": { "type": "generated", "generator": "guid", "parameters": { "defaultFormat": "n" } },
+    "HangfirePassword": {
+      "type": "generated",
+      "generator": "join",
+      "parameters": {
+        "symbols": [
+          { "type": "ref", "value": "HangfirePasswordPart1" },
+          { "type": "ref", "value": "HangfirePasswordPart2" }
+        ],
+        "separator": ""
+      },
+      "replaces": "TGFqCojv5eRKnfl6gQ9w66GmTlDntpN6s2Lya7VsoaVcJfuT16i8jfGTgRsnvrU"
+    }
+  },
+  "sources": [
+    {
+      "modifiers": [
+        {
+          "exclude": [
+            "**/bin/**",
+            "**/obj/**",
+            "**/*.user",
+            "**/.vs/**",
+            "**/.idea/**",
+            ".git/**"
+          ]
+        }
+      ]
+    }
+  ]
+}

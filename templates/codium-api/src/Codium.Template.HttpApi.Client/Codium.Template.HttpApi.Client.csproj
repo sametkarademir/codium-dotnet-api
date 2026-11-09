@@ -1,0 +1,7 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+      <ProjectReference Include="..\Codium.Template.Application.Contracts\Codium.Template.Application.Contracts.csproj" />
+    </ItemGroup>
+
+</Project>
