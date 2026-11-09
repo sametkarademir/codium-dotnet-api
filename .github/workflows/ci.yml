@@ -138,3 +138,54 @@ jobs:
       - name: Stop the API
         if: always()
         run: kill "$(cat /tmp/api.pid)" 2>/dev/null || true
+
+  # Packs the template, installs it like a user would, generates a project and checks it.
+  # Catches renaming mistakes, leaked dev files and a broken generated project, which the
+  # jobs above (they build the template sources themselves) cannot see.
+  template_smoke:
+    name: Template smoke (pack, generate, build)
+    runs-on: ubuntu-latest
+    env:
+      PROJECT_NAME: Acme.Shop
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Pack the template
+        run: dotnet pack Codium.Templates.csproj --configuration Release --output artifacts
+
+      - name: Install the template from the package
+        run: dotnet new install ./artifacts/Codium.Templates.*.nupkg
+
+      - name: Generate a project
+        run: dotnet new codium --name "$PROJECT_NAME" --output "$RUNNER_TEMP/generated"
+
+      - name: Check the generated project contents
+        working-directory: ${{ runner.temp }}/generated
+        run: |
+          fail=0
+          for p in .claude .specify specs Codium.Template.sln; do
+            if [ -e "$p" ]; then echo "::error::unexpected '$p' in generated project"; fail=1; fi
+          done
+          for p in "$PROJECT_NAME.sln" .gitignore .editorconfig global.json Directory.Build.props Directory.Packages.props .github/workflows/ci.yml; do
+            if [ ! -e "$p" ]; then echo "::error::missing '$p' in generated project"; fail=1; fi
+          done
+          if grep -rIil --exclude-dir=bin --exclude-dir=obj codium .; then
+            echo "::error::'codium' left over in the files listed above"; fail=1
+          fi
+          if grep -rIl --exclude-dir=bin --exclude-dir=obj 50488eb4944b1ede9c7e5db1af4dd5a0 .; then
+            echo "::error::the sample JWT signing key was not replaced"; fail=1
+          fi
+          exit $fail
+
+      - name: Build the generated project
+        working-directory: ${{ runner.temp }}/generated
+        run: dotnet build "$PROJECT_NAME.sln" --configuration Release
+
+      - name: Run the generated project's unit tests
+        working-directory: ${{ runner.temp }}/generated
+        run: dotnet test "tests/$PROJECT_NAME.UnitTests" --configuration Release --no-build
